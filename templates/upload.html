@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="upload-wrapper">
+    <div class="upload-header">
+        <h1>Instant Crop Disease Detection</h1>
+        <p>Upload a photo of a diseased leaf, and our AI will diagnose it in seconds.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+
+        <!-- Live Camera Video Element (Hidden by default) -->
+        <div id="camera-container" style="display: none; margin-bottom: 20px;">
+            <video id="camera-stream" autoplay playsinline style="width: 100%; border-radius: 12px; border: 2px solid #059669;"></video>
+            <button type="button" id="capture-btn" class="btn-browse" style="margin-top: 10px; width: 100%;">📸 Capture Photo</button>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+            <i class="bi bi-cloud-arrow-up drop-icon"></i>
+            <p>Drag and drop your leaf image here</p>
+            <span>or</span>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <label for="file-input" class="btn-browse">Browse Files</label>
+                <button type="button" id="start-camera-btn" class="btn-browse" style="background: #2563EB;">Use Camera 📷</button>
+            </div>
+            <input id="file-input" type="file" name="leaf_image" accept="image/*" required onchange="updateFileName(this)">
+            <p id="file-name" class="file-name"></p>
+        </div>
+        <button type="submit" class="btn-submit">Analyze Image</button>
+    </form>
+
+     <script>
+        function updateFileName(input) {
+            const fileName = input.files[0] ? input.files[0].name : "";
+            document.getElementById('file-name').innerText = fileName;
+        }
+
+        // Live Camera Logic
+        const startCameraBtn = document.getElementById('start-camera-btn');
+        const captureBtn = document.getElementById('capture-btn');
+        const video = document.getElementById('camera-stream');
+        const fileInput = document.getElementById('file-input');
+        const cameraContainer = document.getElementById('camera-container');
+        const dropZone = document.getElementById('drop-zone');
+        let stream = null;
+
+        startCameraBtn.onclick = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                cameraContainer.style.display = 'block';
+                dropZone.style.display = 'none';
+            } catch (err) {
+                alert("Could not access camera. Please check permissions.");
+            }
+        };
+
+        captureBtn.onclick = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            // Convert to file and attach to form
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // Stop camera
+                if(stream) stream.getTracks().forEach(track => track.stop());
+                cameraContainer.style.display = 'none';
+                dropZone.style.display = 'block';
+                document.getElementById('file-name').innerText = "camera_capture.jpg (Ready)";
+            }, 'image/jpeg');
+        };
+    </script>
+    
+</div>
+
+<script>
+    // Simple JS to show the file name when selected
+    function updateFileName(input) {
+        const fileName = input.files[0] ? input.files[0].name : "";
+        document.getElementById('file-name').innerText = fileName;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+    
+    <!-- Header -->
+    <div style="margin-bottom: 30px;">
+        <h1 style="font-size: 32px; font-weight: 800; color: #111; margin-bottom: 8px;">👨‍🔬 Expert Triage Dashboard</h1>
+        <p style="color: #666; font-size: 16px;">Review escalated AI cases and provide expert prescriptions.</p>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px;">
+        <div style="background: white; padding: 24px; border-radius: 12px; border-left: 6px solid #F59E0B; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <small style="color: #666; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Pending Reviews</small>
+            <h2 style="font-size: 36px; margin: 8px 0 0 0; color: #111;">{{ total_pending }}</h2>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 12px; border-left: 6px solid #059669; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <small style="color: #666; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Verified Cases</small>
+            <h2 style="font-size: 36px; margin: 8px 0 0 0; color: #111;">{{ total_verified }}</h2>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 12px; border-left: 6px solid #2563EB; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <small style="color: #666; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Video Consultations</small>
+            <h2 style="font-size: 36px; margin: 8px 0 0 0; color: #111;">{{ consultations|length }}</h2>
+        </div>
+    </div>
+
+    <!-- Escalation Inbox -->
+    <div style="background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); border: 1px solid #eee; overflow: hidden; margin-bottom: 40px;">
+        
+        <!-- Header with Filter -->
+        <div style="padding: 24px 32px; border-bottom: 1px solid #eee; background: #F9FAFB; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <h3 style="font-size: 20px; font-weight: 700; color: #111; margin: 0;">🚨 Case Escalation Inbox</h3>
+            
+            <form method="GET" style="display: flex; gap: 12px;">
+                <input type="text" name="crop" placeholder="Filter by crop (e.g., Tomato)..." value="{{ request.GET.crop|default:'' }}" 
+                       style="padding: 10px 16px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; width: 250px; outline: none;">
+                <button type="submit" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;">
+                    Filter
+                </button>
+            </form>
+        </div>
+        
+        <!-- Modern Table -->
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background: white; border-bottom: 2px solid #eee;">
+                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Leaf Image</th>
+                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">AI Prediction</th>
+                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Confidence</th>
+                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
+                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in escalated_cases %}
+                    <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='white'">
+                        
+                        <!-- Image -->
+                        <td style="padding: 20px 32px;">
+                            <img src="{{ case.image.url }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        </td>
+                        
+                        <!-- Prediction -->
+                        <td style="padding: 20px 32px;">
+                            <div style="font-weight: 700; font-size: 16px; color: #111; margin-bottom: 4px;">{{ case.predicted_disease }}</div>
+                            <div style="font-size: 14px; color: #666;">Farmer: <span style="font-weight: 600; color: #2563EB;">{{ case.user.username }}</span></div>
+                        </td>
+                        
+                        <!-- Confidence -->
+                        <td style="padding: 20px 32px;">
+                            <span style="background: #FEF2F2; color: #DC2626; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 15px; border: 1px solid #FECACA;">
+                                {{ case.confidence }}%
+                            </span>
+                        </td>
+                        
+                        <!-- Status -->
+                        <td style="padding: 20px 32px;">
+                            {% if case.review_status == 'verified' %}
+                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #ECFDF5; color: #059669; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; border: 1px solid #D1FAE5;">
+                                    <i class="bi bi-check-circle-fill"></i> Verified
+                                </span>
+                            {% else %}
+                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #FEF3C7; color: #D97706; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; border: 1px solid #FDE68A;">
+                                    <i class="bi bi-clock-fill"></i> Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Action -->
+                        <td style="padding: 20px 32px;">
+                            <a href="{% url 'review_case' case.id %}" style="display: inline-block; background: #111; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#111'">
+                                Review Case →
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 60px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                            <h3 style="font-size: 20px; color: #111; margin-bottom: 8px;">You're all caught up!</h3>
+                            <p style="color: #666;">There are no escalated cases in the inbox right now.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

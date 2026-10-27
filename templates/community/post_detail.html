@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+    
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'forum_list' %}" style="color: #059669; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="bi bi-arrow-left"></i> Back to Community
+        </a>
+    </div>
+
+    <!-- Main Question -->
+    <div style="background: white; padding: 32px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 24px;">
+        <h1 style="font-size: 28px; color: #111; margin-bottom: 12px; line-height: 1.3;">{{ post.title }}</h1>
+        <p style="font-size: 14px; color: #666; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-person-circle"></i> Asked by <strong>{{ post.author.username }}</strong> on {{ post.created_at|date:"d M Y, h:i A" }}
+        </p>
+        <div style="font-size: 16px; color: #333; line-height: 1.7; white-space: pre-wrap;">{{ post.content }}</div>
+    </div>
+
+    <!-- Answers Section -->
+    <h3 style="font-size: 20px; color: #111; margin-bottom: 16px;">💬 {{ comments.count }} Answer{{ comments.count|pluralize }}</h3>
+    
+    {% for comment in comments %}
+    <div style="background: #F9FAFB; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 12px;">
+        <p style="font-size: 15px; color: #333; margin-bottom: 12px; line-height: 1.6;">{{ comment.content }}</p>
+        <div style="font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;">
+            <i class="bi bi-reply-fill" style="transform: scaleX(-1);"></i> 
+            Answered by <strong style="color: #059669;">{{ comment.author.username }}</strong>
+        </div>
+    </div>
+    {% empty %}
+    <div style="background: white; padding: 40px; border-radius: 12px; border: 1px dashed #ccc; text-align: center; margin-bottom: 24px;">
+        <p style="color: #666; margin: 0;">No answers yet. Be the first to help!</p>
+    </div>
+    {% endfor %}
+
+    <!-- Write Answer Form -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; margin-top: 32px;">
+        <h4 style="font-size: 18px; color: #111; margin-bottom: 16px;">Your Answer</h4>
+        <form method="POST">
+            {% csrf_token %}
+            <textarea name="content" required rows="4" placeholder="Share your knowledge or advice..." 
+                      style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; font-family: inherit; resize: vertical; margin-bottom: 16px;"></textarea>
+            <button type="submit" style="background: #059669; color: white; padding: 10px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;">
+                Post Answer
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

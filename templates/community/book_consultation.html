@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="upload-wrapper" style="max-width: 500px;">
+    <div class="upload-form">
+        <h2>Book Consultation</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">with Dr. {{ expert.user.username }}</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div style="text-align: left; margin-bottom: 16px;">
+                <label style="font-weight: 600; font-size: 14px;">Describe your crop issue:</label>
+                <textarea name="issue_description" required rows="4" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-top: 8px; font-family: inherit;"></textarea>
+            </div>
+            <div style="text-align: left; margin-bottom: 24px;">
+                <label style="font-weight: 600; font-size: 14px;">Preferred Date & Time:</label>
+                <input type="datetime-local" name="scheduled_time" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-top: 8px;">
+            </div>
+            <button type="submit" class="btn-submit">Confirm Booking</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

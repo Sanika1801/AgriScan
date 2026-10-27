@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* Force 3 cards horizontally on desktop */
+    .expert-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        justify-content: center;
+    }
+
+    /* 2 cards per row on tablets */
+    @media (max-width: 1024px) {
+        .expert-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* 1 card per row on mobile */
+    @media (max-width: 768px) {
+        .expert-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .expert-card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 24px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .expert-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .expert-avatar {
+        width: 80px;
+        height: 80px;
+        background: #ECFDF5;
+        color: #059669;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        margin: 0 auto 16px;
+    }
+
+    .expert-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111;
+        margin-bottom: 4px;
+    }
+
+    .expert-spec {
+        color: #059669;
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+
+    .expert-exp {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+        flex: 1; /* Pushes the fee and button to the bottom */
+    }
+
+    .expert-fee-box {
+        background: #F9FAFB;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+    }
+
+    .expert-btn {
+        display: block;
+        width: 100%;
+        background: #059669;
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+        box-sizing: border-box;
+        transition: background 0.2s;
+    }
+
+    .expert-btn:hover {
+        background: #047857;
+    }
+</style>
+
+<div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+    
+    <div style="text-align: center; margin-bottom: 48px;">
+        <h1 style="font-size: 36px; font-weight: 800; color: #111; margin-bottom: 8px;">👨‍🔬 Consult an Expert</h1>
+        <p style="color: #666; font-size: 16px;">Book a 1-on-1 video call with certified Agronomists.</p>
+    </div>
+
+    <!-- 3-Column Grid -->
+    <div class="expert-grid">
+        {% for expert in experts %}
+        <div class="expert-card">
+            
+            <!-- Avatar -->
+            <div class="expert-avatar">
+                🧑‍🌾
+            </div>
+            
+            <!-- Name -->
+            <h3 class="expert-name">
+                Dr. {{ expert.user.username|slice:"3:"|title }}
+            </h3>
+            
+            <p class="expert-spec">{{ expert.specialization }}</p>
+            <p class="expert-exp">{{ expert.experience_years }} Years Experience</p>
+            
+            <div class="expert-fee-box">
+                <span style="font-size: 14px; color: #666;">Fee:</span>
+                <strong style="font-size: 20px; color: #111; margin-left: 8px;">₹{{ expert.consultation_fee }}</strong>
+            </div>
+
+            <a href="{% url 'book_consultation' expert.user.id %}" class="expert-btn">
+                Book Video Call
+            </a>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 60px; background: white; border-radius: 12px;">
+            <p style="color: #666; font-size: 16px;">No experts available right now.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

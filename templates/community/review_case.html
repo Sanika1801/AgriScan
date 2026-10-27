@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 1100px; margin: 40px auto; padding: 0 20px;">
+    
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'agronomist_dashboard' %}" style="color: #666; text-decoration: none; font-weight: 600;">← Back to Inbox</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        
+        <!-- LEFT SIDE: Image & AI Data -->
+        <div>
+            <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 24px;">
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">📸 Farmer Upload</h3>
+                
+                <!-- Image with Simulated Heatmap Overlay -->
+                <div style="position: relative; border-radius: 8px; overflow: hidden;">
+                    <img src="{{ case.image.url }}" style="width: 100%; display: block;">
+                    <div style="position: absolute; top: 20%; left: 30%; width: 40%; height: 40%; background: rgba(255,0,0,0.3); border: 2px solid red; border-radius: 50%; box-shadow: 0 0 20px rgba(255,0,0,0.5);">
+                        <span style="position: absolute; top: -20px; left: 0; background: red; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;">AI Bounding Box</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; background: #F3F4F6; padding: 16px; border-radius: 8px;">
+                    <h4 style="font-size: 14px; font-weight: 700; color: #111; margin-bottom: 8px;">AI Prediction</h4>
+                    <p style="font-size: 20px; font-weight: 800; color: #DC2626; margin: 0;">{{ case.predicted_disease }}</p>
+                    <p style="font-size: 14px; color: #666; margin-top: 4px;">Confidence: {{ case.confidence }}% (Below Threshold)</p>
+                </div>
+            </div>
+
+            <!-- Metadata Overhead -->
+            <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">🌱 Environmental Metadata</h3>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <span style="color: #666;">Local Humidity</span> <strong style="color: #111;">78% (High Risk)</strong>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <span style="color: #666;">Temperature</span> <strong style="color: #111;">28°C</strong>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <span style="color: #666;">Soil pH</span> <strong style="color: #111;">6.5 (Slightly Acidic)</strong>
+                    </li>
+                    <li style="display: flex; justify-content: space-between;">
+                        <span style="color: #666;">Field Location</span> <strong style="color: #111;">Punjab, Sector 4</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: Digital Prescription Pad -->
+        <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; height: fit-content;">
+            <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 8px; color: #111;">📝 Digital Prescription</h3>
+            <p style="color: #666; font-size: 14px; margin-bottom: 24px;">Provide the final confirmed diagnosis and treatment plan.</p>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #111;">Confirmed Diagnosis</label>
+                    <input type="text" name="expert_diagnosis" value="{{ case.expert_diagnosis|default:case.predicted_disease }}" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #059669;">🌿 Organic Cure</label>
+                    <textarea name="organic_cure" rows="3" placeholder="e.g., Neem oil spray, crop rotation..." style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px;">{{ case.organic_cure|default:'' }}</textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #DC2626;">🧪 Chemical Cure</label>
+                    <textarea name="chemical_cure" rows="3" placeholder="e.g., Apply Chlorothalonil 75% WP..." style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px;">{{ case.chemical_cure|default:'' }}</textarea>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #2563EB;">🛡️ Preventative Practices</label>
+                    <textarea name="prevention_practice" rows="3" placeholder="e.g., Ensure proper air circulation..." style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px;">{{ case.prevention_practice|default:'' }}</textarea>
+                </div>
+
+                <button type="submit" style="width: 100%; background: #059669; color: white; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;">
+                    Save & Verify Case
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 900px; margin: 40px auto; padding: 0 20px; display: flex; gap: 24px; flex-wrap: wrap;">
+    
+    <!-- Left: Payment Methods -->
+    <div style="flex: 1; min-width: 300px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h2 style="margin-bottom: 20px; color: #111;">Choose Payment Method</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 24px;">
+            <div style="flex: 1; border: 2px solid #059669; background: #ECFDF5; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;">
+                <div style="font-size: 24px;">📱</div>
+                <div style="font-weight: 600; font-size: 14px; color: #059669;">UPI</div>
+            </div>
+            <div style="flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;">
+                <div style="font-size: 24px;">💳</div>
+                <div style="font-weight: 600; font-size: 14px; color: #666;">Card</div>
+            </div>
+            <div style="flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;">
+                <div style="font-size: 24px;">🏦</div>
+                <div style="font-weight: 600; font-size: 14px; color: #666;">NetBanking</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="font-weight: 600; color: #333; font-size: 14px; display: block; margin-bottom: 8px;">Enter UPI ID / Virtual Payment Address</label>
+            <input type="text" placeholder="yourname@upi" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px;">
+        </div>
+
+        <form method="POST" action="{% url 'process_payment' %}">
+            {% csrf_token %}
+            <button type="submit" style="width: 100%; background: #059669; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer;">
+                Pay ₹{{ total }} Securely
+            </button>
+        </form>
+        
+        <p style="text-align: center; color: #888; font-size: 12px; margin-top: 16px;">🔒 100% Secure Payment (Mock Gateway)</p>
+    </div>
+
+    <!-- Right: Order Summary -->
+    <div style="flex: 1; min-width: 300px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content;">
+        <h3 style="margin-bottom: 20px; color: #111;">Order Summary</h3>
+        
+        {% for item in cart_items %}
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 12px 0;">
+            <span style="color: #444;">{{ item.quantity }}x {{ item.product.name }}</span>
+            <span style="font-weight: 600;">₹{{ item.total_price }}</span>
+        </div>
+        {% endfor %}
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
+            <span style="font-weight: 700; font-size: 18px;">Total</span>
+            <span style="font-weight: 800; font-size: 20px; color: #059669;">₹{{ total }}</span>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

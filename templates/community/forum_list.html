@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .forum-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .forum-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .forum-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px 32px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #F3F4F6;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .forum-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .forum-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #059669;
+        text-decoration: none;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .forum-title:hover {
+        text-decoration: underline;
+    }
+
+    .forum-content {
+        color: #444;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .forum-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #eee;
+        padding-top: 16px;
+        margin-top: 8px;
+    }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+        background: #ECFDF5;
+        color: #059669;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 16px;
+    }
+
+    .author-text {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .author-text strong {
+        color: #111;
+    }
+
+    .date-text {
+        font-size: 14px;
+        color: #888;
+        font-weight: 500;
+    }
+
+    .read-more-btn {
+        background: #F3F4F6;
+        color: #111;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .read-more-btn:hover {
+        background: #E5E7EB;
+    }
+</style>
+
+<div class="forum-container">
+    
+    <!-- Header -->
+    <div class="forum-header">
+        <div>
+            <h1 style="font-size: 36px; font-weight: 800; color: #111; margin-bottom: 8px;">🌾 Farmer Community</h1>
+            <p style="color: #666; font-size: 16px;">Ask questions and share knowledge with other farmers.</p>
+        </div>
+        <a href="{% url 'create_post' %}" style="background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2); transition: 0.2s;">
+            + Ask a Question
+        </a>
+    </div>
+
+    <!-- Post List -->
+    {% for post in posts %}
+    <div class="forum-card">
+        
+        <!-- Title -->
+        <a href="{% url 'post_detail' post.id %}" class="forum-title">
+            {{ post.title }}
+        </a>
+
+        <!-- Content Preview -->
+        <p class="forum-content">
+            {{ post.content|truncatewords:40 }}
+        </p>
+
+        <!-- Footer Meta -->
+        <div class="forum-meta">
+            <div class="author-info">
+                <div class="avatar">{{ post.author.username|first|upper }}</div>
+                <div>
+                    <div class="author-text">Asked by <strong>{{ post.author.username }}</strong></div>
+                    <div class="date-text">{{ post.created_at|date:"d M Y, h:i A" }}</div>
+                </div>
+            </div>
+            <a href="{% url 'post_detail' post.id %}" class="read-more-btn">
+                View Discussion <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    
+    <!-- Empty State -->
+    <div style="text-align: center; padding: 80px 20px; background: white; border-radius: 12px; border: 1px solid #F3F4F6; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="font-size: 64px; margin-bottom: 16px;">💬</div>
+        <h3 style="font-size: 24px; color: #111; margin-bottom: 8px;">No questions yet</h3>
+        <p style="color: #666; margin-bottom: 24px; font-size: 16px;">The community is quiet. Be the first to start a discussion!</p>
+        <a href="{% url 'create_post' %}" style="background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px;">Ask the First Question</a>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .auth-wrapper {
+        display: flex;
+        min-height: 80vh;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        margin: 40px auto;
+        max-width: 1100px;
+    }
+    .auth-left {
+        flex: 1;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: white;
+        position: relative;
+    }
+    .auth-left h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; line-height: 1.2; }
+    .auth-left p { font-size: 18px; opacity: 0.9; line-height: 1.6; margin-bottom: 40px; }
+    .auth-right {
+        flex: 1;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .auth-right h2 { font-size: 28px; font-weight: 800; color: #111; margin-bottom: 8px; }
+    .auth-right p.subtitle { color: #666; margin-bottom: 32px; }
+    .input-group { margin-bottom: 20px; position: relative; }
+    .input-group label { display: block; font-size: 13px; font-weight: 700; color: #333; margin-bottom: 8px; }
+    .input-group i { position: absolute; left: 16px; top: 42px; color: #999; font-size: 18px; }
+    .form-input {
+        width: 100%; padding: 14px 16px 14px 45px;
+        border: 1.5px solid #E5E7EB; border-radius: 10px;
+        font-size: 15px; font-family: inherit; outline: none;
+        transition: 0.2s; background: #F9FAFB;
+    }
+    .form-input:focus { border-color: #059669; background: white; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); }
+    .btn-auth {
+        width: 100%; padding: 14px; background: #059669; color: white;
+        border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+        cursor: pointer; transition: 0.2s; margin-top: 10px;
+    }
+    .btn-auth:hover { background: #047857; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2); }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: 14px; color: #666; }
+    .auth-footer a { color: #059669; font-weight: 700; text-decoration: none; }
+    
+    @media (max-width: 900px) {
+        .auth-wrapper { flex-direction: column; margin: 20px; }
+        .auth-left { padding: 40px; text-align: center; }
+        .auth-right { padding: 40px; }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <!-- Left Side: Branding -->
+    <div class="auth-left">
+        <div style="font-size: 64px; margin-bottom: 20px;">🌱</div>
+        <h1>Welcome Back to AgriScan</h1>
+        <p>Your AI-powered agricultural companion. Detect crop diseases instantly and connect with experts.</p>
+        <div style="display: flex; gap: 16px; margin-top: 20px;">
+            <div style="background: rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                <strong style="display: block; font-size: 20px;">98%</strong>
+                <span style="font-size: 13px; opacity: 0.8;">AI Accuracy</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                <strong style="display: block; font-size: 20px;">24/7</strong>
+                <span style="font-size: 13px; opacity: 0.8;">Expert Support</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: Form -->
+    <div class="auth-right">
+        <h2>Login</h2>
+        <p class="subtitle">Enter your credentials to access your dashboard.</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="input-group">
+                <label>Username</label>
+                <i class="bi bi-person"></i>
+                <input type="text" name="username" class="form-input" placeholder="Enter your username" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <i class="bi bi-lock"></i>
+                <input type="password" name="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn-auth">Sign In →</button>
+        </form>
+        
+        <div class="auth-footer">
+            Don't have an account? <a href="{% url 'register' %}">Create one</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="result-wrapper" style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
+    <div class="result-card" style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden;">
+        
+        <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid #eee;">
+            <h2 style="font-size: 24px; font-weight: 800; margin: 0;">Diagnosis Result</h2>
+            <a href="{% url 'home' %}" style="color: #666; text-decoration: none; font-weight: 500;">← Scan Another</a>
+        </div>
+
+        <div class="result-grid" style="display: grid; grid-template-columns: 1fr 1.2fr;">
+            
+            <!-- Left Side: Images -->
+            <div class="result-image" style="background: #f9f9f9; padding: 24px; border-right: 1px solid #eee; display: flex; flex-direction: column; gap: 24px;">
+                
+                <div>
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Original Upload</h4>
+                    <img src="{{ log.image.url }}" alt="Scanned Leaf" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                </div>
+
+                {% if gradcam_image %}
+                <div>
+                    <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #059669; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-eye-fill"></i> AI Focus (Heatmap)
+                    </h4>
+                    <img src="{{ gradcam_image }}" alt="AI Heatmap" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #059669;">
+                    <p style="font-size: 12px; color: #666; margin-top: 12px; line-height: 1.5;">
+                        The <span style="color: #DC2626; font-weight: bold;">red areas</span> show exactly where the AI detected disease symptoms.
+                    </p>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Right Side: Info -->
+            <div class="result-info" style="padding: 32px;">
+                
+                <div class="diagnosis-title">
+                    <span class="label" style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px;">DETECTED CONDITION:</span>
+                    <h3 class="disease-name" style="font-size: 32px; color: #059669; margin: 8px 0 24px 0;">{{ disease.name }}</h3>
+                </div>
+                
+                <div class="confidence-bar" style="background: #F3F4F6; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                    <div class="confidence-text" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+                        <span>AI Confidence</span>
+                        <strong>{{ log.confidence }}%</strong>
+                    </div>
+                    <div class="bar-bg" style="background: #D1D5DB; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div class="bar-fill" style="background: #059669; height: 100%; border-radius: 4px; width: {{ log.confidence }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Severity Assessment -->
+                <div class="confidence-bar" style="background: #F3F4F6; padding: 16px; border-radius: 12px; margin-bottom: 32px;">
+                    <div class="confidence-text" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+                        <span>Leaf Surface Affected (Severity)</span>
+                        <strong style="color: {% if log.severity > 60 %}#DC2626{% elif log.severity > 30 %}#D97706{% else %}#16A34A{% endif %};">
+                            {{ log.severity }}%
+                        </strong>
+                    </div>
+                    <div class="bar-bg" style="background: #D1D5DB; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div class="bar-fill" style="height: 100%; border-radius: 4px; width: {{ log.severity }}%; background: {% if log.severity > 60 %}#DC2626{% elif log.severity > 30 %}#D97706{% else %}#16A34A{% endif %};"></div>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 8px;">Based on visual damage analysis.</p>
+                </div>
+
+                <div class="info-block" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
+                        <i class="bi bi-info-circle"></i> Description
+                    </h4>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.description }}</p>
+                </div>
+
+                <div class="info-block" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
+                        <i class="bi bi-capsule"></i> Treatment
+                    </h4>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.treatment }}</p>
+                </div>
+
+                <div class="info-block" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
+                        <i class="bi bi-shield-check"></i> Prevention
+                    </h4>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.prevention }}</p>
+                </div>
+
+                <!-- Dosage Instructions -->
+                <div class="info-block" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
+                        <i class="bi bi-eyedropper"></i> Dosage & Application
+                    </h4>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.dosage_instructions|default:"Apply as per manufacturer guidelines on the product label." }}</p>
+                </div>
+
+                <!-- Safety Advisory -->
+                <div class="info-block" style="margin-bottom: 24px; background: #FEF2F2; padding: 16px; border-radius: 8px; border-left: 4px solid #DC2626;">
+                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #991B1B;">
+                        <i class="bi bi-shield-exclamation"></i> Ecosystem Safety
+                    </h4>
+                    <p style="font-size: 14px; color: #7F1D1D; line-height: 1.6;">{{ disease.safety_advisory|default:"Avoid spraying during high winds or near water bodies to protect pollinators and aquatic life." }}</p>
+                </div>
+
+                <a href="{% url 'download_report' log.id %}" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                    📄 Download PDF Report
+                </a>
+
+                <!-- EXPERT VERIFICATION SECTION -->
+                {% if log.review_status == 'verified' %}
+                <div style="margin-top: 32px; background: #F0FDF4; border: 2px solid #059669; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="background: #059669; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; color: #065F46; font-size: 18px; font-weight: 800;">Verified by Agronomist</h3>
+                            <p style="margin: 0; color: #047857; font-size: 14px;">This diagnosis was manually reviewed by an expert.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <small style="color: #666; font-weight: 700; text-transform: uppercase;">Confirmed Diagnosis</small>
+                        <h4 style="margin: 4px 0 0 0; color: #111; font-size: 18px;">{{ log.expert_diagnosis }}</h4>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        {% if log.organic_cure %}
+                        <div style="background: #ECFDF5; padding: 16px; border-radius: 8px; border-left: 4px solid #059669;">
+                            <h4 style="margin: 0 0 8px 0; color: #065F46; font-size: 14px;">🌿 Organic Cure</h4>
+                            <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.5;">{{ log.organic_cure }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if log.chemical_cure %}
+                        <div style="background: #FEF2F2; padding: 16px; border-radius: 8px; border-left: 4px solid #DC2626;">
+                            <h4 style="margin: 0 0 8px 0; color: #991B1B; font-size: 14px;">🧪 Chemical Cure</h4>
+                            <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.5;">{{ log.chemical_cure }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if log.prevention_practice %}
+                    <div style="margin-top: 16px; background: #EFF6FF; padding: 16px; border-radius: 8px; border-left: 4px solid #2563EB;">
+                        <h4 style="margin: 0 0 8px 0; color: #1E40AF; font-size: 14px;">🛡️ Preventative Practices</h4>
+                        <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.5;">{{ log.prevention_practice }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

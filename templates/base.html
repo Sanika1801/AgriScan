@@ -1,0 +1,234 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AgriScan - Crop Disease Detector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+        main { flex: 1 0 auto; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar" style="background: white; border-bottom: 1px solid #eee; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+    <div class="nav-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 0 auto; padding: 16px 30px; box-sizing: border-box; gap: 20px;">
+        
+        <!-- LEFT SIDE: Logo & Main Links -->
+        <div style="display: flex; align-items: center; gap: 20px; flex-shrink: 1; overflow: hidden;">
+            <a href="/" class="brand" style="font-size: 24px; font-weight: 800; color: #059669; text-decoration: none; white-space: nowrap; flex-shrink: 0;">
+                🌱 AgriScan
+            </a>
+            
+            <div class="nav-links" style="display: flex; align-items: center; gap: 20px; white-space: nowrap;">
+                {% if user.is_authenticated %}
+                    
+                    <!-- 1. CHECK ADMIN/SUPERUSER FIRST -->
+                    {% if user.is_superuser or user.role == 'admin' %}
+                        <a href="{% url 'admin_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Analytics</a>
+                        {% if user.is_superuser %}
+                            <a href="/admin/" target="_blank" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Django Admin ⚙️</a>
+                        {% endif %}
+
+                    <!-- 2. CHECK SELLER -->
+                    {% elif user.role == 'seller' %}
+                        <a href="{% url 'seller_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Seller Dashboard</a>
+                        <a href="{% url 'store' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">View Store</a>
+
+                    <!-- 3. CHECK AGRONOMIST -->
+                    {% elif user.role == 'agronomist' %}
+                        <a href="{% url 'agronomist_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">My Consultations</a>
+
+                    <!-- 4. FALLBACK: FARMER (Default) -->
+                    {% else %}
+                        <a href="{% url 'home' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Scan Leaf</a>
+                        <a href="{% url 'store' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Marketplace</a>
+                        <a href="{% url 'view_cart' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none; display: flex; align-items: center; gap: 4px;">Cart 🛒</a>
+                        <a href="{% url 'history' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">My Scans</a>
+                        <a href="{% url 'weather_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Weather Alerts</a>
+                        <a href="{% url 'forum_list' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Community</a>
+                        <a href="{% url 'expert_list' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Experts</a>
+                    {% endif %}
+                    
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: User Profile & Logout -->
+        <div style="display: flex; align-items: center; gap: 16px; white-space: nowrap; flex-shrink: 0; margin-left: 20px;">
+            {% if user.is_authenticated %}
+                <span style="font-size: 15px; font-weight: 700; color: #059669;">
+                    Hi, {{ user.username }}
+                </span>
+                
+                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; color: #dc2626; padding: 0;">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" style="font-size: 15px; font-weight: 600; color: #059669; text-decoration: none;">Login</a>
+                <a href="{% url 'register' %}" style="background: #059669; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">Sign Up</a>
+            {% endif %}
+        </div>
+
+    </div>
+</nav>
+
+
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER -->
+<footer style="background: #064E3B; color: #D1FAE5; padding: 60px 0 20px 0; margin-top: 60px; font-family: 'Inter', sans-serif;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px;">
+            <div>
+                <a href="{% url 'home' %}" style="display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 800; color: white; text-decoration: none; margin-bottom: 16px;">
+                    🌱 AgriScan
+                </a>
+                <p style="font-size: 14px; line-height: 1.6; color: #A7F3D0; margin-bottom: 20px;">
+                    Empowering farmers with AI-driven crop disease detection, expert consultations, and a seamless marketplace.
+                </p>
+                <div style="display: flex; gap: 12px;">
+                    <a href="#" style="color: white; background: rgba(255,255,255,0.1); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none;"><i class="bi bi-facebook"></i></a>
+                    <a href="#" style="color: white; background: rgba(255,255,255,0.1); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none;"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" style="color: white; background: rgba(255,255,255,0.1); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none;"><i class="bi bi-instagram"></i></a>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="color: white; font-size: 16px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Platform</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                    <li><a href="{% url 'home' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">AI Scan Leaf</a></li>
+                    <li><a href="{% url 'store' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Marketplace</a></li>
+                    <li><a href="{% url 'expert_list' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Consult Experts</a></li>
+                    <li><a href="{% url 'forum_list' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Community Forum</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 style="color: white; font-size: 16px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                    <li><a href="{% url 'weather_dashboard' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Weather Alerts</a></li>
+                    <li><a href="{% url 'history' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">My Scan History</a></li>
+                    <li><a href="{% url 'view_cart' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">My Cart</a></li>
+                    {% if not user.is_authenticated %}
+                    <li><a href="{% url 'register' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Create Account</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div>
+                <h4 style="color: white; font-size: 16px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Contact Us</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; font-size: 14px; color: #A7F3D0;">
+                    <li style="display: flex; gap: 10px; align-items: flex-start;">
+                        <i class="bi bi-geo-alt-fill" style="margin-top: 2px;"></i>
+                        <span>123 AgriTech Park,<br>New Delhi, India 110001</span>
+                    </li>
+                    <li style="display: flex; gap: 10px; align-items: center;">
+                        <i class="bi bi-envelope-fill"></i>
+                        <span>support@agriscan.in</span>
+                    </li>
+                    <li style="display: flex; gap: 10px; align-items: center;">
+                        <i class="bi bi-telephone-fill"></i>
+                        <span>+91 1800 123 4567</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #6EE7B7;">
+            <p style="margin: 0;">&copy; 2026 AgriScan AI. Built for MCA Major Project.</p>
+            <div style="display: flex; gap: 20px;">
+                <a href="#" style="color: #6EE7B7; text-decoration: none;">Privacy Policy</a>
+                <a href="#" style="color: #6EE7B7; text-decoration: none;">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- FLOATING AI CHATBOT (Hidden on Login and Register Pages) -->
+{% if '/login/' not in request.path and '/register/' not in request.path %}
+<div id="chatbot-btn" style="position: fixed; bottom: 20px; right: 20px; background: #059669; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000;">
+    🤖
+</div>
+
+<div id="chatbot-window" style="display: none; position: fixed; bottom: 90px; right: 20px; width: 320px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; border: 1px solid #eee;">
+    <div style="background: #059669; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between;">
+        <span>🤖 AI Agronomist</span>
+        <span id="close-chat" style="cursor: pointer;">✖</span>
+    </div>
+    <div id="chat-messages" style="height: 250px; overflow-y: auto; padding: 15px; background: #f9f9f9; font-size: 14px;">
+        <div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            Hello! I am your AI Agronomist. Ask me about dosages, weather, or treatments.
+        </div>
+    </div>
+    <div style="display: flex; border-top: 1px solid #eee; padding: 10px;">
+        <input type="text" id="chat-input" placeholder="Type a question..." style="flex: 1; border: none; outline: none; padding: 5px;">
+        <button id="send-chat" style="background: none; border: none; color: #059669; font-weight: bold; cursor: pointer;">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatbotBtn = document.getElementById('chatbot-btn');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const closeChat = document.getElementById('close-chat');
+    const sendChat = document.getElementById('send-chat');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    chatbotBtn.onclick = () => chatbotWindow.style.display = 'block';
+    closeChat.onclick = () => chatbotWindow.style.display = 'none';
+
+    function addMessage(text, isUser) {
+        const div = document.createElement('div');
+        div.style.cssText = isUser 
+            ? "background: #059669; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: right; margin-left: 20px;" 
+            : "background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-right: 20px;";
+        div.innerText = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    sendChat.onclick = () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        addMessage(text, true);
+        chatInput.value = '';
+
+        setTimeout(() => {
+            const lower = text.toLowerCase();
+            let reply = "I'm not sure about that. Please consult a local expert.";
+            
+            if (lower.includes('hi') || lower.includes('hello') || lower.includes('hey')) {
+                reply = "Hello! How can I help you today? You can ask me about crop diseases, dosages, or weather risks.";
+            } else if (lower.includes('dose') || lower.includes('dosage') || lower.includes('spray')) {
+                reply = "For most fungicides, mix 2ml per 1 liter of water. Always spray during early morning or late evening.";
+            } else if (lower.includes('weather') || lower.includes('rain') || lower.includes('humidity')) {
+                reply = "High humidity increases fungal risk. Avoid spraying if rain is expected within 6 hours.";
+            } else if (lower.includes('safety') || lower.includes('toxic')) {
+                reply = "Always wear a mask and gloves. Do not spray near water bodies to protect fish and bees.";
+            } else if (lower.includes('blight') || lower.includes('scab')) {
+                reply = "Late Blight spreads fast. Immediately remove infected leaves and apply copper-based fungicide.";
+            }
+            
+            addMessage(reply, false);
+        }, 800);
+    };
+
+    chatInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendChat.click();
+        }
+    });
+</script>
+{% endif %}
+
+</body>
+</html>
