@@ -80,11 +80,11 @@ AgriScan is a comprehensive, full-stack **MCA Major Project** designed to empowe
 
 4. **Set up the database:**
 
-  ```bash
-  python manage.py makemigrations
-  python manage.py migrate
+   ```bash
+    python manage.py makemigrations
+    python manage.py migrate
 
-  ```
+   ```
 
 5. **Train the AI Model(Optional - if ```crop_disease_model.h5``` is not present):**
 Download the PlantVillage dataset from Kaggle.
