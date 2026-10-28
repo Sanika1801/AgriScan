@@ -1,14 +1,20 @@
 import os
 import dj_database_url
 from pathlib import Path
+from dotenv import load_dotenv
 
 # ... (Keep your existing imports) ...
+# 1. Load environment variables FIRST
+load_dotenv()
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# 2. THEN define BASE_DIR (this must be BEFORE DATABASES)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 3. THEN the security settings
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
-# Allow all hosts for Render (or set your specific Render URL)
 ALLOWED_HOSTS = ['*']
+
 
 # ... (Keep INSTALLED_APPS, etc.) ...
 
