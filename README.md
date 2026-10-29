@@ -117,7 +117,7 @@ To test the different roles of the platform, use the following accounts. *(Passw
 | 🧑‍🌾 **Farmer** | `farmer_raj` | `pass12345` | Scan leaves, view heatmaps, buy products, book experts. |
 | 👨‍🔬 **Agronomist** | `dr_smith` | `pass12345` | Review escalated AI cases, write digital prescriptions. |
 | 🏪 **Seller** | `seller1` | `pass12345` | View revenue charts, manage product inventory. |
-| 🛡️ **Admin** | `riya` | `pass12345` | View platform analytics, access Django Admin. |
+| 🛡️ **Admin** | `admin` | `pass12345` | View platform analytics, access Django Admin. |
 
 ---
 ---

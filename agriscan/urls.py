@@ -66,8 +66,40 @@ def setup_live_db(request):
         cat_pest, _ = Category.objects.get_or_create(name="Pesticides")
         cat_seeds, _ = Category.objects.get_or_create(name="Seeds")
         cat_tools, _ = Category.objects.get_or_create(name="Farming Tools")
+        
+                # 7. CREATE FORUM POSTS & COMMENTS
+        from community.models import ForumPost, ForumComment
+        
+        farmer_dev, _ = User.objects.get_or_create(username='farmer_dev', defaults={'role': 'farmer'})
 
-        # 7. CREATE 8 PRODUCTS
+        forum_data = [
+            {
+                "title": "White spots on my tomato leaves - is this Late Blight?",
+                "content": "I noticed white powdery spots on the lower leaves of my tomato plants yesterday. It has been very humid here. I used the AI scanner and it said 'Tomato Late Blight' with 85% confidence. Does anyone know the best organic treatment for this?",
+                "comments": [
+                    (User.objects.get(username='dr_smith'), "Yes, that is Late Blight. You need to act fast. Remove the infected leaves immediately and spray a copper-based fungicide. Avoid watering the leaves directly."),
+                    (farmer_dev, "I had the same issue last week. I used Neem oil and it helped slow it down."),
+                ]
+            },
+            {
+                "title": "Yellowing of wheat crop in Sector 4",
+                "content": "My wheat crop is turning yellow from the tips of the leaves. The soil pH is around 6.5. Could this be a nitrogen deficiency or a disease?",
+                "comments": [
+                    (User.objects.get(username='dr_smith'), "Yellowing from the tips usually indicates a Nitrogen deficiency. Try applying a urea top-dressing."),
+                ]
+            }
+        ]
+
+        for p_data in forum_data:
+            post, created = ForumPost.objects.get_or_create(
+                title=p_data["title"],
+                defaults={'author': farmer, 'content': p_data["content"]}
+            )
+            if created:
+                for c_author, c_text in p_data["comments"]:
+                    ForumComment.objects.create(post=post, author=c_author, content=c_text)
+
+        # 8. CREATE 8 PRODUCTS
         products_data = [
             ("Organic Vermicompost", cat_fert, 350.00, 50, "100% organic vermicompost."),
             ("NPK 19:19:19 Water Soluble", cat_fert, 450.00, 120, "Premium water-soluble fertilizer."),
