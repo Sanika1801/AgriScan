@@ -4,6 +4,8 @@ import os
 
 def generate_gradcam(image_path, output_path):
     try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
         img = cv2.imread(image_path)
         if img is None:
             return False

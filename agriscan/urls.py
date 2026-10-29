@@ -83,6 +83,3 @@ urlpatterns = [
     path('register/', register, name='register'),
     path('logout/', custom_logout, name='logout'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# Add this block to serve media files in production
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

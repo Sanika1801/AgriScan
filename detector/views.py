@@ -51,26 +51,33 @@ def upload_image(request):
     if request.method == 'POST' and request.FILES.get('leaf_image'):
         uploaded_file = request.FILES['leaf_image']
         
-        # Ensure the uploads directory exists
-        upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        fs = FileSystemStorage(location=upload_dir)
-        filename = fs.save(uploaded_file.name, uploaded_file)
-        file_path = fs.path(filename)
-        
         if MODEL is None:
             return render(request, 'error.html', {'error': 'AI Model not loaded.'})
             
+        # 1. Save the image directly using Django's ImageField logic
+        # This automatically creates the /media/uploads/ folder and saves the correct path
+        log = PredictionLog.objects.create(
+            user=request.user,
+            image=uploaded_file, 
+            predicted_disease="Processing...", # Temporary placeholder
+            confidence=0, 
+            severity=0
+        )
+        
+        file_path = log.image.path
+        filename = os.path.basename(log.image.name)
+        
+        # 2. Preprocess the image
         img = image.load_img(file_path, target_size=(224, 224))
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0) / 255.0
         
+        # 3. Predict
         predictions = MODEL.predict(img_array)
         predicted_class_index = np.argmax(predictions[0])
         confidence = float(np.max(predictions[0])) * 100
         
-        # Generate Heatmap
+        # 4. Generate Heatmap
         gradcam_filename = f"heatmap_{filename}"
         gradcam_path = os.path.join(settings.MEDIA_ROOT, 'uploads', gradcam_filename)
         heatmap_success = generate_gradcam(file_path, gradcam_path)
@@ -91,13 +98,11 @@ def upload_image(request):
         else:
             severity = random.randint(15, 45)
 
-        log = PredictionLog.objects.create(
-            user=request.user,
-            image=filename,
-            predicted_disease=clean_name,
-            confidence=round(confidence, 2),
-            severity=severity
-        )
+        # 5. Update the record with the actual results
+        log.predicted_disease = clean_name
+        log.confidence = round(confidence, 2)
+        log.severity = severity
+        log.save()
         
         farmer_phone = request.user.phone 
         if farmer_phone:
