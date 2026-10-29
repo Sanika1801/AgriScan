@@ -61,11 +61,31 @@ def setup_live_db(request):
         for name, desc, treat, prev in diseases:
             Disease.objects.get_or_create(name=name, defaults={'description': desc, 'treatment': treat, 'prevention': prev, 'dosage_instructions': 'Follow label.', 'safety_advisory': 'Wear PPE.'})
 
-        # 6. CREATE PRODUCTS
-        cat, _ = Category.objects.get_or_create(name="Pesticides")
-        Product.objects.get_or_create(name="Organic Fungicide", seller=seller, category=cat, price=499.00, stock=50, defaults={'description': 'Cures most fungal diseases.'})
+        # 6. CREATE CATEGORIES
+        cat_fert, _ = Category.objects.get_or_create(name="Fertilizers")
+        cat_pest, _ = Category.objects.get_or_create(name="Pesticides")
+        cat_seeds, _ = Category.objects.get_or_create(name="Seeds")
+        cat_tools, _ = Category.objects.get_or_create(name="Farming Tools")
+
+        # 7. CREATE 8 PRODUCTS
+        products_data = [
+            ("Organic Vermicompost", cat_fert, 350.00, 50, "100% organic vermicompost."),
+            ("NPK 19:19:19 Water Soluble", cat_fert, 450.00, 120, "Premium water-soluble fertilizer."),
+            ("Neem Oil Bio-Pesticide", cat_pest, 299.00, 80, "Natural neem extract."),
+            ("Chlorothalonil Fungicide", cat_pest, 550.00, 40, "Effective for Late Blight."),
+            ("Hybrid Tomato Seeds (100g)", cat_seeds, 180.00, 200, "High-yield seeds."),
+            ("Premium Wheat Seeds (5kg)", cat_seeds, 850.00, 60, "Certified wheat seeds."),
+            ("Heavy Duty Steel Spade", cat_tools, 650.00, 30, "Durable steel spade."),
+            ("Battery Knapsack Sprayer", cat_tools, 1499.00, 15, "16-liter sprayer.")
+        ]
+
+        for name, cat, price, stock, desc in products_data:
+            Product.objects.get_or_create(
+                name=name, 
+                defaults={'seller': seller, 'category': cat, 'price': price, 'stock': stock, 'description': desc}
+            )
         
-        return HttpResponse("🎉 SUCCESS! The database is reset and populated.<br><br>Try logging in now with:<br><b>farmer_raj</b> / pass12345")
+        return HttpResponse("🎉 SUCCESS! The database is reset and populated with 8 products.<br><br>Try logging in now with:<br><b>farmer_raj</b> / pass12345")
         
     except Exception as e:
         return HttpResponse(f"❌ ERROR: The script failed. Reason: {str(e)}")
