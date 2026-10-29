@@ -17,7 +17,7 @@ def setup_live_db(request):
         
         # 1. FORCE CREATE/UPDATE ADMIN
         admin, _ = User.objects.get_or_create(username='admin')
-        admin.set_password('Admin@123')
+        admin.set_password('pass12345')
         admin.is_superuser = True
         admin.is_staff = True
         admin.role = 'admin'

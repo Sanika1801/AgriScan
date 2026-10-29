@@ -13,4 +13,5 @@ urlpatterns = [
     path('forum/', views.forum_list, name='forum_list'),
     path('forum/new/', views.create_post, name='create_post'),
     path('forum/<int:post_id>/', views.post_detail, name='post_detail'),
+    path('expert-dashboard/delete/<int:pk>/', views.delete_triage_case, name='delete_triage_case'),
 ]

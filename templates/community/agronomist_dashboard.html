@@ -56,9 +56,13 @@
                     {% for case in escalated_cases %}
                     <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='white'">
                         
-                        <!-- Image -->
+                                                <!-- Image -->
                         <td style="padding: 20px 32px;">
-                            <img src="{{ case.image.url }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="width: 80px; height: 80px; border-radius: 10px; overflow: hidden; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ case.image.url }}" 
+                                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=100&q=80';"
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
                         </td>
                         
                         <!-- Prediction -->
@@ -87,11 +91,16 @@
                             {% endif %}
                         </td>
                         
-                        <!-- Action -->
+                                                <!-- Action -->
                         <td style="padding: 20px 32px;">
-                            <a href="{% url 'review_case' case.id %}" style="display: inline-block; background: #111; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#111'">
-                                Review Case →
-                            </a>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <a href="{% url 'review_case' case.id %}" style="background: #111; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#111'">
+                                    Review Case →
+                                </a>
+                                <a href="{% url 'delete_triage_case' case.id %}" onclick="return confirm('Are you sure you want to remove this case?');" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; padding: 10px 14px; border-radius: 8px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#DC2626'; this.style.color='white'" onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

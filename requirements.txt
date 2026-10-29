@@ -10,4 +10,4 @@ tensorflow-cpu>=2.20.0
 opencv-python-headless>=4.10.0.84
 reportlab==4.2.2
 requests==2.31.0
-numpy>=1.26.4
+numpy>=2.0.0

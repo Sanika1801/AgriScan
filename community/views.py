@@ -132,3 +132,16 @@ def review_case(request, pk):
         return redirect('agronomist_dashboard')
 
     return render(request, 'community/review_case.html', {'case': case})
+
+@login_required
+def delete_triage_case(request, pk):
+    if request.user.role != 'agronomist':
+        return redirect('dashboard')
+    
+    from detector.models import PredictionLog
+    case = get_object_or_404(PredictionLog, id=pk)
+    case.delete()
+    
+    from django.contrib import messages
+    messages.success(request, "🗑️ Case removed from Triage Inbox.")
+    return redirect('agronomist_dashboard')
