@@ -1,65 +1,66 @@
 import os
-import numpy as np
-import random
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-from django.core.files.storage import FileSystemStorage
 from django.conf import settings
-from django.contrib import messages # <-- Added for delete success message
+from django.contrib import messages
 from .models import PredictionLog, Disease
 from marketplace.models import Product
 from django.contrib.auth import logout
-from tensorflow.keras.models import load_model # type: ignore
-from tensorflow.keras.preprocessing import image # type: ignore
 from django.db.models import Count
 from marketplace.models import Order
-from community.models import ExpertConsultation
+from community.models import ExpertConsultation, ForumPost
 from django.contrib.auth import get_user_model
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from .gradcam import generate_gradcam
-from analytics.utils import send_sms
+from analytics.utils import send_sms, get_disease_risk_alert
+from .forms import CropCycleForm 
+from .models import MarketPrice
+from django.db.models import Avg
 
-# Load the AI model and class names
+# Import the new Predictor
+from .predictor import AgriPredictor
+
 MODEL_PATH = os.path.join(settings.BASE_DIR, 'crop_disease_model.h5')
 CLASS_NAMES_PATH = os.path.join(settings.BASE_DIR, 'class_names.txt')
 
 try:
-    MODEL = load_model(MODEL_PATH)
     with open(CLASS_NAMES_PATH, 'r') as f:
         CLASS_NAMES = [line.strip() for line in f.readlines()]
+    AI_MODEL = AgriPredictor(MODEL_PATH, CLASS_NAMES)
 except Exception as e:
-    MODEL = None
-    CLASS_NAMES = []
-    print(f"⚠️ AI Model not found. Please train it first. Error: {e}")
+    AI_MODEL = None
+    print(f"⚠️ AI Model not loaded: {e}")
 
 def upload_image(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-    
-    if request.user.role == 'seller':
-        return redirect('seller_dashboard')
-    elif request.user.role == 'agronomist':
-        return redirect('agronomist_dashboard')
-    elif request.user.role == 'admin' or request.user.is_superuser:
-        return redirect('admin_dashboard')
+    # 1. Role-based redirects for logged-in users
+    if request.user.is_authenticated:
+        if request.user.role == 'seller':
+            return redirect('seller_dashboard')
+        elif request.user.role == 'agronomist':
+            return redirect('agronomist_dashboard')
+        elif request.user.role == 'admin' or request.user.is_superuser:
+            return redirect('admin_dashboard')
 
+    # 2. Handle POST requests (Uploading an image)
     if request.method == 'POST' and request.FILES.get('leaf_image'):
+        if not request.user.is_authenticated:
+            return redirect('login') 
+            
         uploaded_file = request.FILES['leaf_image']
         
-        if MODEL is None:
+        if AI_MODEL is None:
             return render(request, 'error.html', {'error': 'AI Model not loaded.'})
             
-        # 1. Save the image directly using Django's ImageField logic
-        # This automatically creates the /media/uploads/ folder and saves the correct path
+        # Save image
         log = PredictionLog.objects.create(
             user=request.user,
             image=uploaded_file, 
-            predicted_disease="Processing...", # Temporary placeholder
+            predicted_disease="Processing...",
             confidence=0, 
             severity=0
         )
@@ -67,48 +68,41 @@ def upload_image(request):
         file_path = log.image.path
         filename = os.path.basename(log.image.name)
         
-        # 2. Preprocess the image
-        img = image.load_img(file_path, target_size=(224, 224))
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        # AI Prediction (Top-3 + OOD)
+        result = AI_MODEL.predict(file_path)
         
-        # 3. Predict
-        predictions = MODEL.predict(img_array)
-        predicted_class_index = np.argmax(predictions[0])
-        confidence = float(np.max(predictions[0])) * 100
+        # Calculate actual Severity via OpenCV
+        severity = AI_MODEL.calculate_severity(file_path)
         
-        # 4. Generate Heatmap
+        # Generate Heatmap
         gradcam_filename = f"heatmap_{filename}"
         gradcam_path = os.path.join(settings.MEDIA_ROOT, 'uploads', gradcam_filename)
         heatmap_success = generate_gradcam(file_path, gradcam_path)
         
-        raw_name = CLASS_NAMES[predicted_class_index]
+        # Clean up string formatting for display
+        raw_name = result["top_prediction"]
         if '___' in raw_name:
             crop, disease = raw_name.split('___', 1)
             disease = disease.replace('_', ' ').title()
-            if disease.lower().startswith(crop.lower()):
-                clean_name = disease
-            else:
-                clean_name = f"{crop.capitalize()} {disease}"
+            clean_name = disease if disease.lower().startswith(crop.lower()) else f"{crop.capitalize()} {disease}"
         else:
             clean_name = raw_name.replace('_', ' ').title()
-        
-        if confidence > 75:
-            severity = random.randint(60, 95)
-        else:
-            severity = random.randint(15, 45)
 
-        # 5. Update the record with the actual results
+        # Update Database
         log.predicted_disease = clean_name
-        log.confidence = round(confidence, 2)
+        log.confidence = round(result["confidence"], 2)
+        log.alternatives = result["alternatives"]
+        log.is_ood = result["is_ood"]
         log.severity = severity
         log.save()
         
+        # SMS Alert
         farmer_phone = request.user.phone 
-        if farmer_phone:
-            sms_message = f"AgriScan Alert: Your crop has been diagnosed with {clean_name} ({round(confidence,2)}% confidence)."
+        if farmer_phone and not result["is_ood"]:
+            sms_message = f"AgriScan Alert: Your crop has been diagnosed with {clean_name} ({log.confidence}% confidence)."
             send_sms(farmer_phone, sms_message)
         
+        # Fetch Disease Info
         try:
             disease_info = Disease.objects.get(name__iexact=clean_name)
         except Disease.DoesNotExist:
@@ -128,10 +122,78 @@ def upload_image(request):
             'log': log,
             'disease': disease_info,
             'recommended_products': recommended_products,
-            'gradcam_image': f"/media/uploads/{gradcam_filename}" if heatmap_success else None
+            'gradcam_image': f"/media/uploads/{gradcam_filename}" if heatmap_success else None,
+            'needs_review': result["needs_review"]
         })
         
-    return render(request, 'upload.html')
+    # 3. Handle GET requests (Home Page Dashboard)
+    if request.user.is_authenticated:
+        recent_scans = PredictionLog.objects.filter(user=request.user).order_by('-date_uploaded')[:3]
+        all_user_scans = PredictionLog.objects.filter(user=request.user)
+        total_scans = all_user_scans.count()
+        healthy_count = all_user_scans.filter(predicted_disease__icontains='healthy').count()
+        diseased_count = total_scans - healthy_count
+
+        from .models import CropCycle
+        active_crops = CropCycle.objects.filter(farmer=request.user, is_active=True)[:3]
+    else:
+        # Empty data for anonymous users
+        recent_scans = []
+        total_scans = 0
+        healthy_count = 0
+        diseased_count = 0
+        active_crops = []
+
+    top_products = Product.objects.all().order_by('?')[:3] 
+    latest_post = ForumPost.objects.order_by('-id').first()
+    
+    # --- NEW FEATURE 1: Weather Alert ---
+    weather_alert = get_disease_risk_alert()
+
+    # --- NEW FEATURE 2: Market Price Logic ---
+    market_data = []
+    # Get the 3 most recently updated crops
+    unique_crops = MarketPrice.objects.values_list('crop_name', flat=True).distinct()[:3]
+    
+    for crop in unique_crops:
+        # Get today's price
+        latest_price = MarketPrice.objects.filter(crop_name=crop).order_by('-date', '-id').first()
+        # Get 7-day average
+        avg_price = MarketPrice.objects.filter(crop_name=crop).aggregate(Avg('price_per_quintal'))['price_per_quintal__avg']
+        
+        
+        if latest_price and avg_price:
+            recommendation = "Hold"
+            color = "#F59E0B" # Orange
+            # Convert Decimal to float for comparison
+            avg_price_float = float(avg_price) 
+            latest_price_float = float(latest_price.price_per_quintal)
+            
+            if latest_price_float > avg_price_float * 1.05: # 5% above average
+                recommendation = "Sell Now"
+                color = "#10B981" # Green
+            elif latest_price_float < avg_price_float * 0.95: # 5% below average
+                recommendation = "Wait"
+                color = "#EF4444" # Red
+                
+            market_data.append({
+                'crop': crop,
+                'price': f"{latest_price_float:.0f}",
+                'recommendation': recommendation,
+                'color': color
+            })
+    
+    return render(request, 'upload.html', {
+        'recent_scans': recent_scans,
+        'top_products': top_products,
+        'latest_post': latest_post,
+        'total_scans': total_scans,
+        'healthy_count': healthy_count,
+        'diseased_count': diseased_count,
+        'active_crops': active_crops,
+        'weather_alert': weather_alert,
+        'market_data': market_data, # <-- Added to context
+    })
 
 
 def history(request):
@@ -154,7 +216,7 @@ def admin_dashboard(request):
     total_orders = Order.objects.count()
     total_consultations = ExpertConsultation.objects.count()
     common_diseases = PredictionLog.objects.values('predicted_disease').annotate(count=Count('predicted_disease')).order_by('-count')[:5]
-    recent_scans = PredictionLog.objects.order_by('-date_uploaded')[:5]
+    recent_scans = PredictionLog.objects.order_by('-id')[:5]
     
     context = {
         'total_scans': total_scans,
@@ -171,7 +233,7 @@ def scan_detail(request, pk):
         return redirect('login')
     log = get_object_or_404(PredictionLog, id=pk, user=request.user)
     
-    # Regenerate the heatmap if it doesn't exist (useful for old scans)
+    # Regenerate the heatmap if it doesn't exist
     gradcam_filename = f"heatmap_{log.image.name.split('/')[-1]}"
     gradcam_path = os.path.join(settings.MEDIA_ROOT, 'uploads', gradcam_filename)
     
@@ -202,23 +264,17 @@ def scan_detail(request, pk):
         'gradcam_image': f"/media/uploads/{gradcam_filename}" if heatmap_success else None
     })
 
-# ==========================================
-# NEW: Delete Scan Function
-# ==========================================
 @login_required
 def delete_scan(request, pk):
     if not request.user.is_authenticated:
         return redirect('login')
     
-    # Get the specific scan, ensuring it belongs to the logged-in user
     log = get_object_or_404(PredictionLog, id=pk, user=request.user)
     
-    # Optional: Delete the image files from storage to save space
     try:
         if os.path.exists(log.image.path):
             os.remove(log.image.path)
         
-        # Also try to delete the heatmap if it exists
         heatmap_name = f"heatmap_{log.image.name.split('/')[-1]}"
         heatmap_path = os.path.join(settings.MEDIA_ROOT, 'uploads', heatmap_name)
         if os.path.exists(heatmap_path):
@@ -230,6 +286,23 @@ def delete_scan(request, pk):
     
     messages.success(request, "🗑️ Scan deleted successfully.")
     return redirect('history')
+
+
+@login_required
+def add_crop_cycle(request):
+    if request.method == 'POST':
+        form = CropCycleForm(request.POST)
+        if form.is_valid():
+            cycle = form.save(commit=False)
+            cycle.farmer = request.user 
+            cycle.is_active = True      
+            cycle.save()
+            messages.success(request, "🌱 Crop cycle added successfully!")
+            return redirect('home')
+    else:
+        form = CropCycleForm()
+        
+    return render(request, 'add_crop.html', {'form': form})
     
 def download_report(request, pk):
     if not request.user.is_authenticated:

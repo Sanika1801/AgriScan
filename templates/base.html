@@ -27,30 +27,30 @@
             <div class="nav-links" style="display: flex; align-items: center; gap: 20px; white-space: nowrap;">
                 {% if user.is_authenticated %}
                     
-                    <!-- 1. CHECK ADMIN/SUPERUSER FIRST -->
                     {% if user.is_superuser or user.role == 'admin' %}
                         <a href="{% url 'admin_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Analytics</a>
                         {% if user.is_superuser %}
                             <a href="/admin/" target="_blank" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Django Admin ⚙️</a>
                         {% endif %}
 
-                    <!-- 2. CHECK SELLER -->
                     {% elif user.role == 'seller' %}
                         <a href="{% url 'seller_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Seller Dashboard</a>
-                        <a href="{% url 'store' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">View Store</a>
+                        <a href="/marketplace/" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">View Store</a>
 
-                    <!-- 3. CHECK AGRONOMIST -->
                     {% elif user.role == 'agronomist' %}
                         <a href="{% url 'agronomist_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">My Consultations</a>
 
-                    <!-- 4. FALLBACK: FARMER (Default) -->
                     {% else %}
                         <a href="{% url 'home' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Scan Leaf</a>
-                        <a href="{% url 'store' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Marketplace</a>
+                        <a href="/marketplace/" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Marketplace</a>
                         <a href="{% url 'view_cart' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none; display: flex; align-items: center; gap: 4px;">Cart 🛒</a>
                         <a href="{% url 'history' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">My Scans</a>
-                        <a href="{% url 'weather_dashboard' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Weather Alerts</a>
+                        <a href="/weather/" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Weather Alerts</a>
+                        <a href="{% url 'order_history' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">My Orders</a>
+                        
+                        <!-- FIXED NAVBAR LINK HERE -->
                         <a href="{% url 'forum_list' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Community</a>
+                        
                         <a href="{% url 'expert_list' %}" style="font-size: 15px; font-weight: 600; color: #333; text-decoration: none;">Experts</a>
                     {% endif %}
                     
@@ -61,26 +61,32 @@
         <!-- RIGHT SIDE: User Profile & Logout -->
         <div style="display: flex; align-items: center; gap: 16px; white-space: nowrap; flex-shrink: 0; margin-left: 20px;">
             {% if user.is_authenticated %}
-                <span style="font-size: 15px; font-weight: 700; color: #059669;">
-                    Hi, {{ user.username }}
-                </span>
+                <!-- Logged In-->
+                <a href="{% url 'home' %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #111827; font-weight: 600; font-size: 15px;">
+                    <div style="background: #ECFDF5; color: #059669; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    My Account
+                </a>
                 
                 <form method="post" action="{% url 'logout' %}" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" style="background: none; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; color: #dc2626; padding: 0;">Logout</button>
+                    <button type="submit" style="background: none; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; color: #dc2626; padding: 0;">Sign Out</button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}" style="font-size: 15px; font-weight: 600; color: #059669; text-decoration: none;">Login</a>
-                <a href="{% url 'register' %}" style="background: #059669; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">Sign Up</a>
+            <!-- Guest User -->
+                <a href="{% url 'login' %}" style="font-size: 15px; font-weight: 600; color: #059669; text-decoration: none;">Sign In</a>
+                <a href="{% url 'register' %}" style="background: #059669; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2)">Sign Up</a>
             {% endif %}
         </div>
 
     </div>
 </nav>
 
-
+<!-- THIS IS WHERE THE UPLOAD.HTML CONTENT WILL INJECT ITSELF -->
 <main class="container">
-    {% block content %}{% endblock %}
+    {% block content %}
+    {% endblock %}
 </main>
 
 <!-- FOOTER -->
@@ -105,8 +111,10 @@
                 <h4 style="color: white; font-size: 16px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Platform</h4>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
                     <li><a href="{% url 'home' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">AI Scan Leaf</a></li>
-                    <li><a href="{% url 'store' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Marketplace</a></li>
+                    <li><a href="/marketplace/" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Marketplace</a></li>
                     <li><a href="{% url 'expert_list' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Consult Experts</a></li>
+                    
+                    <!-- FIXED FOOTER LINK AND STYLING HERE -->
                     <li><a href="{% url 'forum_list' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Community Forum</a></li>
                 </ul>
             </div>
@@ -114,7 +122,7 @@
             <div>
                 <h4 style="color: white; font-size: 16px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Quick Links</h4>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                    <li><a href="{% url 'weather_dashboard' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Weather Alerts</a></li>
+                    <li><a href="/weather/" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">Weather Alerts</a></li>
                     <li><a href="{% url 'history' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">My Scan History</a></li>
                     <li><a href="{% url 'view_cart' %}" style="color: #A7F3D0; text-decoration: none; font-size: 14px;">My Cart</a></li>
                     {% if not user.is_authenticated %}
@@ -152,7 +160,7 @@
     </div>
 </footer>
 
-<!-- FLOATING AI CHATBOT (Hidden on Login and Register Pages) -->
+<!-- FLOATING AI CHATBOT -->
 {% if '/login/' not in request.path and '/register/' not in request.path %}
 <div id="chatbot-btn" style="position: fixed; bottom: 20px; right: 20px; background: #059669; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000;">
     🤖

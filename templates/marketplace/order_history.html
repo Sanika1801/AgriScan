@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .orders-container { max-width: 1000px; margin: 30px auto 60px auto; padding: 0 20px; font-family: 'Inter', sans-serif; }
+    .page-header { margin-bottom: 30px; }
+    .page-header h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 0 0 8px 0; }
+    .page-header p { font-size: 15px; color: #6B7280; margin: 0; }
+
+    .order-card { background: white; border-radius: 12px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden; }
+    
+    .order-header { background: #F9FAFB; padding: 16px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .order-meta { display: flex; gap: 24px; font-size: 14px; }
+    .order-meta div { display: flex; flex-direction: column; gap: 4px; }
+    .meta-label { color: #6B7280; font-size: 12px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .meta-value { color: #111827; font-weight: 600; }
+    
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-pending { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+    .status-success { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
+
+    .order-body { padding: 24px; }
+    .order-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #F3F4F6; margin-bottom: 12px; }
+    .order-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+    .item-name { font-weight: 600; color: #374151; font-size: 15px; }
+    .item-qty { color: #6B7280; font-size: 14px; margin-left: 8px; }
+    .item-price { font-weight: 700; color: #111827; }
+
+    .empty-state { background: white; border-radius: 12px; border: 1px solid #E5E7EB; padding: 60px 20px; text-align: center; }
+    .empty-state i { font-size: 48px; color: #D1D5DB; margin-bottom: 16px; display: block; }
+</style>
+
+<div class="orders-container">
+    <div class="page-header">
+        <h1>My Orders</h1>
+        <p>Track and view your purchased agricultural products.</p>
+    </div>
+
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <div class="order-meta">
+                    <div>
+                        <span class="meta-label">Order ID</span>
+                        <span class="meta-value">#ORD-{{ order.id }}</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Date Placed</span>
+                        <span class="meta-value">{{ order.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Total Amount</span>
+                        <span class="meta-value">₹{{ order.total_amount }}</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="status-badge 
+                        {% if order.status == 'Pending' %}status-pending
+                        {% elif order.status == 'Processing' %}status-processing
+                        {% else %}status-completed{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="order-body">
+                <!-- Assuming you have an OrderItem model related to Order -->
+                {% for item in order.items.all %}
+                <div class="order-item">
+                    <div class="item-info">
+                        <div class="item-icon"><i class="bi bi-box-seam"></i></div>
+                        <div>
+                            <p class="item-name">{{ item.product.name }}</p>
+                            <p class="item-qty">Quantity: {{ item.quantity }}</p>
+                        </div>
+                    </div>
+                    <span class="item-price">₹{{ item.price }}</span>
+                </div>
+                {% empty %}
+                    <!-- Fallback if no items found (usually means data wasn't saved) -->
+                    <p style="color: #EF4444; font-size: 14px; text-align: center;">No item details found for this order.</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-bag-x"></i>
+            <h3 style="margin: 0 0 8px 0; color: #111827;">No orders found</h3>
+            <p style="color: #6B7280; margin-bottom: 24px;">You haven't purchased any products yet.</p>
+            <a href="{% url 'store' %}" style="background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Browse Marketplace</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

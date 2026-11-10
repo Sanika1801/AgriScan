@@ -18,16 +18,19 @@
     .input-group { margin-bottom: 16px; position: relative; }
     .input-group label { display: block; font-size: 13px; font-weight: 700; color: #333; margin-bottom: 8px; }
     .input-group i { position: absolute; left: 16px; top: 42px; color: #999; font-size: 18px; }
-    .form-input {
-        width: 100%; padding: 14px 16px 14px 45px; border: 1.5px solid #E5E7EB;
-        border-radius: 10px; font-size: 15px; font-family: inherit; outline: none;
-        transition: 0.2s; background: #F9FAFB;
+    
+    /* Applied directly to Django's generated inputs */
+    .auth-right input, .auth-right select { 
+        width: 100%; padding: 14px 16px 14px 45px; border: 1.5px solid #E5E7EB; border-radius: 10px; 
+        font-size: 15px; font-family: inherit; outline: none; transition: 0.2s; background: #F9FAFB; box-sizing: border-box;
     }
-    .form-input:focus { border-color: #059669; background: white; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); }
+    .auth-right input:focus, .auth-right select:focus { 
+        border-color: #059669; background: white; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); 
+    }
+    
     .btn-auth {
         width: 100%; padding: 14px; background: #059669; color: white; border: none;
-        border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
-        transition: 0.2s; margin-top: 10px;
+        border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 10px;
     }
     .btn-auth:hover { background: #047857; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2); }
     .auth-footer { text-align: center; margin-top: 24px; font-size: 14px; color: #666; }
@@ -40,14 +43,12 @@
 </style>
 
 <div class="auth-wrapper">
-    <!-- Left Side: Branding -->
     <div class="auth-left">
         <div style="font-size: 64px; margin-bottom: 20px;">🌱</div>
         <h1>Join AgriScan Today</h1>
         <p>Create your account to start scanning crops, buying treatments, and consulting with experts.</p>
     </div>
 
-    <!-- Right Side: Form -->
     <div class="auth-right">
         <h2>Create Account</h2>
         <p class="subtitle">Fill in your details to get started.</p>
@@ -57,13 +58,11 @@
             {% for field in form %}
             <div class="input-group">
                 <label>{{ field.label }}</label>
-                <!-- Add icons based on the field name (optional) -->
                 {% if 'username' in field.name %}<i class="bi bi-person"></i>
                 {% elif 'email' in field.name %}<i class="bi bi-envelope"></i>
                 {% elif 'password' in field.name %}<i class="bi bi-lock"></i>
                 {% else %}<i class="bi bi-card-text"></i>{% endif %}
                 
-                <!-- Render the field (Django applies the form-input class via forms.py) -->
                 {{ field }}
                 
                 {% if field.help_text %}
@@ -76,13 +75,8 @@
         </form>
         
         <div class="auth-footer">
-            Already have an account? <a href="{% url 'login' %}">Sign in</a>
+            Already have an account? <a href="{% url 'login' %}">Sign In</a>
         </div>
     </div>
 </div>
-<style>
-    /* Ensure Django's generated inputs match our CSS */
-    .auth-right input, .auth-right select { width: 100%; padding: 14px 16px 14px 45px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 15px; font-family: inherit; outline: none; transition: 0.2s; background: #F9FAFB; box-sizing: border-box; }
-    .auth-right input:focus, .auth-right select:focus { border-color: #059669; background: white; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1); }
-</style>
 {% endblock %}

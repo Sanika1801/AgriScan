@@ -1,57 +1,185 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="max-width: 900px; margin: 40px auto; padding: 0 20px; display: flex; gap: 24px; flex-wrap: wrap;">
+
+<style>
+    /* Checkout Page Container */
+    .checkout-container { max-width: 1000px; margin: 30px auto 60px auto; padding: 0 20px; font-family: 'Inter', sans-serif; }
     
-    <!-- Left: Payment Methods -->
-    <div style="flex: 1; min-width: 300px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <h2 style="margin-bottom: 20px; color: #111;">Choose Payment Method</h2>
-        
-        <div style="display: flex; gap: 10px; margin-bottom: 24px;">
-            <div style="flex: 1; border: 2px solid #059669; background: #ECFDF5; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;">
-                <div style="font-size: 24px;">📱</div>
-                <div style="font-weight: 600; font-size: 14px; color: #059669;">UPI</div>
-            </div>
-            <div style="flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;">
-                <div style="font-size: 24px;">💳</div>
-                <div style="font-weight: 600; font-size: 14px; color: #666;">Card</div>
-            </div>
-            <div style="flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer;">
-                <div style="font-size: 24px;">🏦</div>
-                <div style="font-weight: 600; font-size: 14px; color: #666;">NetBanking</div>
-            </div>
-        </div>
+    /* Header */
+    .page-header { margin-bottom: 30px; }
+    .page-header h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    .page-header p { font-size: 15px; color: #6B7280; margin: 0; }
 
-        <div style="margin-bottom: 24px;">
-            <label style="font-weight: 600; color: #333; font-size: 14px; display: block; margin-bottom: 8px;">Enter UPI ID / Virtual Payment Address</label>
-            <input type="text" placeholder="yourname@upi" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px;">
-        </div>
+    /* Main Grid */
+    .checkout-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; }
 
-        <form method="POST" action="{% url 'process_payment' %}">
-            {% csrf_token %}
-            <button type="submit" style="width: 100%; background: #059669; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer;">
-                Pay ₹{{ total }} Securely
-            </button>
-        </form>
-        
-        <p style="text-align: center; color: #888; font-size: 12px; margin-top: 16px;">🔒 100% Secure Payment (Mock Gateway)</p>
+    /* Cards Base */
+    .card { background: white; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header { padding: 24px; border-bottom: 1px solid #F3F4F6; }
+    .card-title { font-size: 18px; font-weight: 800; color: #111827; margin: 0; }
+    .card-body { padding: 24px; }
+
+    /* Payment Methods (Radio Cards) */
+    .payment-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    
+    /* Hide actual radio buttons */
+    .payment-methods input[type="radio"] { display: none; }
+    
+    .payment-label { 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+        padding: 16px 12px; border: 2px solid #E5E7EB; border-radius: 12px; cursor: pointer;
+        transition: all 0.2s; color: #6B7280;
+    }
+    .payment-label i { font-size: 24px; }
+    .payment-label span { font-weight: 600; font-size: 14px; }
+    
+    /* Selected State */
+    .payment-methods input[type="radio"]:checked + .payment-label {
+        border-color: #059669; background: #ECFDF5; color: #059669;
+    }
+
+    /* Inputs */
+    .form-group { margin-bottom: 24px; }
+    .form-label { display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px; }
+    .form-input { 
+        width: 100%; padding: 14px 16px; border: 1px solid #D1D5DB; border-radius: 8px; 
+        font-size: 15px; outline: none; transition: all 0.2s; box-sizing: border-box; font-family: 'Inter', sans-serif;
+    }
+    .form-input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1); }
+
+    /* Pay Button */
+    .btn-pay { 
+        width: 100%; background: #059669; color: white; border: none; padding: 16px; 
+        border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: background 0.2s;
+        display: flex; justify-content: center; align-items: center; gap: 8px;
+    }
+    .btn-pay:hover { background: #047857; }
+    
+    .secure-text { text-align: center; color: #6B7280; font-size: 13px; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+    /* Order Summary */
+    .summary-items { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .summary-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .summary-item-name { font-size: 14px; color: #374151; font-weight: 500; flex-grow: 1; }
+    .summary-item-price { font-size: 14px; font-weight: 700; color: #111827; white-space: nowrap; }
+    
+    .summary-divider { border-top: 1px solid #F3F4F6; margin: 16px 0; }
+    
+    .summary-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 12px; color: #4B5563; }
+    .summary-row.total { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 0; }
+    .summary-row.total span:last-child { color: #059669; }
+
+    /* Responsive */
+    @media (max-width: 800px) {
+        .checkout-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 500px) {
+        .payment-methods { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="checkout-container">
+    
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Secure Checkout</h1>
+        <p>Complete your payment to place the order.</p>
     </div>
 
-    <!-- Right: Order Summary -->
-    <div style="flex: 1; min-width: 300px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content;">
-        <h3 style="margin-bottom: 20px; color: #111;">Order Summary</h3>
+    <div class="checkout-grid">
         
-        {% for item in cart_items %}
-        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 12px 0;">
-            <span style="color: #444;">{{ item.quantity }}x {{ item.product.name }}</span>
-            <span style="font-weight: 600;">₹{{ item.total_price }}</span>
-        </div>
-        {% endfor %}
-        
-        <div style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee;">
-            <span style="font-weight: 700; font-size: 18px;">Total</span>
-            <span style="font-weight: 800; font-size: 20px; color: #059669;">₹{{ total }}</span>
-        </div>
-    </div>
+        <!-- Left: Payment Methods -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Payment Method</h2>
+            </div>
+            <div class="card-body">
+                
+                <form method="POST" action="{% url 'process_payment' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Modern Radio Payment Selectors -->
+                    <div class="payment-methods">
+                        <input type="radio" name="payment_method" id="method_upi" value="UPI" checked>
+                        <label for="method_upi" class="payment-label">
+                            <i class="bi bi-phone"></i>
+                            <span>UPI</span>
+                        </label>
 
+                        <input type="radio" name="payment_method" id="method_card" value="Card">
+                        <label for="method_card" class="payment-label">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Card</span>
+                        </label>
+
+                        <input type="radio" name="payment_method" id="method_netbanking" value="NetBanking">
+                        <label for="method_netbanking" class="payment-label">
+                            <i class="bi bi-bank"></i>
+                            <span>NetBanking</span>
+                        </label>
+                    </div>
+
+                    <!-- Input Field -->
+                    <div class="form-group">
+                        <label class="form-label">Enter UPI ID / Virtual Payment Address</label>
+                        <input type="text" class="form-input" placeholder="yourname@upi" required>
+                    </div>
+
+                    <!-- Pay Button -->
+                    <button type="submit" class="btn-pay">
+                        <i class="bi bi-lock-fill"></i> Pay ₹{{ total }} Securely
+                    </button>
+                    
+                    <!-- Trust Badge -->
+                    <div class="secure-text">
+                        <i class="bi bi-shield-check" style="color: #10B981;"></i> 
+                        Payments are secure and 256-bit SSL encrypted.
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Right: Order Summary -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Order Summary</h3>
+            </div>
+            <div class="card-body">
+                
+                <div class="summary-items">
+                    {% for item in cart_items %}
+                    <div class="summary-item">
+                        <span class="summary-item-name">
+                            <span style="color: #059669; font-weight: 700;">{{ item.quantity }}x</span> {{ item.product.name }}
+                        </span>
+                        <span class="summary-item-price">₹{{ item.total_price }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-divider"></div>
+
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ total }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span style="color: #059669; font-weight: 600;">Free</span>
+                </div>
+                
+                <div class="summary-divider"></div>
+                
+                <div class="summary-row total">
+                    <span>Total to Pay</span>
+                    <span>₹{{ total }}</span>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
 </div>
+
 {% endblock %}

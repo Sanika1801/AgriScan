@@ -10,5 +10,6 @@ class CustomUserCreationForm(UserCreationForm):
             'username': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Choose a username'}),
             'email': forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'Enter your email'}),
             'phone': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Enter your mobile number'}),
+            
             'role': forms.Select(attrs={'class': 'form-input'}),
         }

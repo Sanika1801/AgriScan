@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'detector',
     'accounts',
     'marketplace',
+    'rest_framework',
     'community',
     'analytics',
 ]

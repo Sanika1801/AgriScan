@@ -4,6 +4,7 @@
 <div class="result-wrapper" style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
     <div class="result-card" style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden;">
         
+        <!-- Header -->
         <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid #eee;">
             <h2 style="font-size: 24px; font-weight: 800; margin: 0;">Diagnosis Result</h2>
             <a href="{% url 'home' %}" style="color: #666; text-decoration: none; font-weight: 500;">← Scan Another</a>
@@ -26,7 +27,7 @@
                     </h4>
                     <img src="{{ gradcam_image }}" alt="AI Heatmap" style="width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #059669;">
                     <p style="font-size: 12px; color: #666; margin-top: 12px; line-height: 1.5;">
-                        The <span style="color: #DC2626; font-weight: bold;">red areas</span> show exactly where the AI detected disease symptoms.
+                        The <span style="color: #DC2626; font-weight: bold;">red areas</span> show exactly where the AI detected symptoms.
                     </p>
                 </div>
                 {% endif %}
@@ -36,77 +37,134 @@
             <!-- Right Side: Info -->
             <div class="result-info" style="padding: 32px;">
                 
+                <!-- 1. OOD & LOW CONFIDENCE BANNERS -->
+                {% if log.is_ood %}
+                <div style="background-color: #F8FAFC; border-left: 4px solid #64748B; padding: 16px; margin-bottom: 24px; border-radius: 8px;">
+                    <p style="color: #0F172A; font-weight: 800; margin: 0 0 4px 0; font-size: 16px;">ℹ️ Analysis Inconclusive</p>
+                    <p style="color: #475569; margin: 0; font-size: 14px; line-height: 1.5;">Our AI could not confidently identify this plant. It may be a plant outside our current database (e.g., Cotton, Sugarcane, Soybean), or the image quality is too low.</p>
+                </div>
+                {% elif needs_review %}
+                <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px; margin-bottom: 24px; border-radius: 8px;">
+                    <p style="color: #92400E; font-weight: 800; margin: 0 0 4px 0; font-size: 16px;">⚠️ Low Confidence Alert</p>
+                    <p style="color: #92400E; margin: 0; font-size: 14px; line-height: 1.5;">The AI is not fully certain about this diagnosis. Please consult with a local agronomist for confirmation.</p>
+                </div>
+                {% endif %}
+                
+                <!-- 2. Disease Title -->
                 <div class="diagnosis-title">
                     <span class="label" style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px;">DETECTED CONDITION:</span>
-                    <h3 class="disease-name" style="font-size: 32px; color: #059669; margin: 8px 0 24px 0;">{{ disease.name }}</h3>
+                    <h3 class="disease-name" style="font-size: 32px; color: {% if log.is_ood %}#475569{% else %}#059669{% endif %}; margin: 8px 0 24px 0;">
+                        {% if log.is_ood %}Inconclusive{% else %}{{ disease.name }}{% endif %}
+                    </h3>
                 </div>
                 
-                <div class="confidence-bar" style="background: #F3F4F6; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <!-- 3. Confidence Bar (Hidden if OOD) -->
+                {% if not log.is_ood %}
+                <div class="confidence-bar" style="background: #F3F4F6; padding: 16px; border-radius: 12px; margin-bottom: 16px;">
                     <div class="confidence-text" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
                         <span>AI Confidence</span>
                         <strong>{{ log.confidence }}%</strong>
                     </div>
                     <div class="bar-bg" style="background: #D1D5DB; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div class="bar-fill" style="background: #059669; height: 100%; border-radius: 4px; width: {{ log.confidence }}%;"></div>
+                        <div class="bar-fill" style="background: {% if log.confidence < 65 %}#F59E0B{% else %}#059669{% endif %}; height: 100%; border-radius: 4px; width: {{ log.confidence }}%;"></div>
                     </div>
                 </div>
+                {% endif %}
 
-                <!-- Severity Assessment -->
-                <div class="confidence-bar" style="background: #F3F4F6; padding: 16px; border-radius: 12px; margin-bottom: 32px;">
-                    <div class="confidence-text" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
-                        <span>Leaf Surface Affected (Severity)</span>
-                        <strong style="color: {% if log.severity > 60 %}#DC2626{% elif log.severity > 30 %}#D97706{% else %}#16A34A{% endif %};">
-                            {{ log.severity }}%
-                        </strong>
+                <!-- 4. Actionable Advice for OOD -->
+                {% if log.is_ood %}
+                <div style="margin-bottom: 32px; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 20px; border-radius: 12px;">
+                    <h4 style="font-size: 15px; font-weight: 700; color: #0F172A; margin: 0 0 12px 0;">How to get a better result:</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.6;">
+                        <li style="margin-bottom: 6px;">Ensure the leaf is well-lit and in focus.</li>
+                        <li style="margin-bottom: 6px;">Place the leaf against a plain background.</li>
+                        <li style="margin-bottom: 6px;">Fill the frame with a single leaf.</li>
+                    </ul>
+                    <a href="{% url 'home' %}" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-weight: 600; color: #2563EB; text-decoration: none; font-size: 14px;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Try Scanning Again
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- 5. Top-3 Alternatives (ONLY if NOT OOD) -->
+                {% if not log.is_ood and log.alternatives and log.alternatives|length > 1 %}
+                <div style="margin-bottom: 24px; padding: 16px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;">
+                    <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1px;">Other Possibilities:</p>
+                    <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 14px;">
+                        {% for alt in log.alternatives|slice:"1:3" %}
+                            <li style="margin-bottom: 8px;">
+                                {{ alt.disease|cut:"_" }} <span style="font-weight: 600; color: #0F172A;">({{ alt.confidence|floatformat:1 }}%)</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- 6. Severity & Disease Info (HIDDEN if OOD) -->
+                {% if not log.is_ood %}
+                    
+                    <!-- Severity -->
+                    <div class="confidence-bar" style="background: #F3F4F6; padding: 16px; border-radius: 12px; margin-bottom: 32px;">
+                        <div class="confidence-text" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+                            <span>Leaf Surface Affected (Severity)</span>
+                            <strong style="color: {% if log.severity > 60 %}#DC2626{% elif log.severity > 30 %}#D97706{% else %}#16A34A{% endif %};">
+                                {{ log.severity }}%
+                            </strong>
+                        </div>
+                        <div class="bar-bg" style="background: #D1D5DB; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div class="bar-fill" style="height: 100%; border-radius: 4px; width: {{ log.severity }}%; background: {% if log.severity > 60 %}#DC2626{% elif log.severity > 30 %}#D97706{% else %}#16A34A{% endif %};"></div>
+                        </div>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">Based on OpenCV visual damage analysis.</p>
                     </div>
-                    <div class="bar-bg" style="background: #D1D5DB; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div class="bar-fill" style="height: 100%; border-radius: 4px; width: {{ log.severity }}%; background: {% if log.severity > 60 %}#DC2626{% elif log.severity > 30 %}#D97706{% else %}#16A34A{% endif %};"></div>
+
+                    <!-- Disease Information Blocks -->
+                    <div class="info-block" style="margin-bottom: 20px;">
+                        <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;"><i class="bi bi-info-circle"></i> Description</h4>
+                        <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.description }}</p>
                     </div>
-                    <p style="font-size: 12px; color: #666; margin-top: 8px;">Based on visual damage analysis.</p>
+
+                    <div class="info-block" style="margin-bottom: 20px;">
+                        <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;"><i class="bi bi-capsule"></i> Treatment</h4>
+                        <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.treatment }}</p>
+                    </div>
+
+                    <div class="info-block" style="margin-bottom: 20px;">
+                        <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;"><i class="bi bi-shield-check"></i> Prevention</h4>
+                        <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.prevention }}</p>
+                    </div>
+
+                    <div class="info-block" style="margin-bottom: 20px;">
+                        <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;"><i class="bi bi-eyedropper"></i> Dosage & Application</h4>
+                        <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.dosage_instructions|default:"Apply as per manufacturer guidelines on the product label." }}</p>
+                    </div>
+
+                    <div class="info-block" style="margin-bottom: 24px; background: #FEF2F2; padding: 16px; border-radius: 8px; border-left: 4px solid #DC2626;">
+                        <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #991B1B;"><i class="bi bi-shield-exclamation"></i> Ecosystem Safety</h4>
+                        <p style="font-size: 14px; color: #7F1D1D; line-height: 1.6;">{{ disease.safety_advisory|default:"Avoid spraying during high winds or near water bodies to protect pollinators and aquatic life." }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- 7. Action Buttons -->
+                <div style="margin-top: 32px; display: flex; flex-wrap: wrap; gap: 16px;">
+                    {% if log.is_ood %}
+                        <!-- Large, prominent CTA for OOD -->
+                        <a href="{% url 'expert_list' %}" style="display: flex; justify-content: center; align-items: center; width: 100%; background: #2563EB; color: white; padding: 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; gap: 8px;">
+                            <i class="bi bi-person-badge"></i> Consult an Expert for this Leaf
+                        </a>
+                    {% else %}
+                        <a href="{% url 'download_report' log.id %}" style="display: inline-flex; align-items: center; gap: 8px; background: #2563EB; color: white; padding: 14px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            <i class="bi bi-file-earmark-pdf"></i> Download PDF Report
+                        </a>
+                        
+                        {% if needs_review %}
+                        <a href="{% url 'expert_list' %}" style="display: inline-flex; align-items: center; gap: 8px; background: white; color: #D97706; border: 1px solid #FDE68A; padding: 14px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            <i class="bi bi-person-badge"></i> Verify with Expert
+                        </a>
+                        {% endif %}
+                    {% endif %}
                 </div>
 
-                <div class="info-block" style="margin-bottom: 20px;">
-                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
-                        <i class="bi bi-info-circle"></i> Description
-                    </h4>
-                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.description }}</p>
-                </div>
-
-                <div class="info-block" style="margin-bottom: 20px;">
-                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
-                        <i class="bi bi-capsule"></i> Treatment
-                    </h4>
-                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.treatment }}</p>
-                </div>
-
-                <div class="info-block" style="margin-bottom: 20px;">
-                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
-                        <i class="bi bi-shield-check"></i> Prevention
-                    </h4>
-                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.prevention }}</p>
-                </div>
-
-                <!-- Dosage Instructions -->
-                <div class="info-block" style="margin-bottom: 20px;">
-                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #111;">
-                        <i class="bi bi-eyedropper"></i> Dosage & Application
-                    </h4>
-                    <p style="font-size: 14px; color: #666; line-height: 1.6;">{{ disease.dosage_instructions|default:"Apply as per manufacturer guidelines on the product label." }}</p>
-                </div>
-
-                <!-- Safety Advisory -->
-                <div class="info-block" style="margin-bottom: 24px; background: #FEF2F2; padding: 16px; border-radius: 8px; border-left: 4px solid #DC2626;">
-                    <h4 style="font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #991B1B;">
-                        <i class="bi bi-shield-exclamation"></i> Ecosystem Safety
-                    </h4>
-                    <p style="font-size: 14px; color: #7F1D1D; line-height: 1.6;">{{ disease.safety_advisory|default:"Avoid spraying during high winds or near water bodies to protect pollinators and aquatic life." }}</p>
-                </div>
-
-                <a href="{% url 'download_report' log.id %}" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                    📄 Download PDF Report
-                </a>
-
-                <!-- EXPERT VERIFICATION SECTION -->
+                <!-- 8. Expert Verification Section -->
                 {% if log.review_status == 'verified' %}
                 <div style="margin-top: 32px; background: #F0FDF4; border: 2px solid #059669; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">

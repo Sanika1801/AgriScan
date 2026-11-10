@@ -1,114 +1,204 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+
+<style>
+    /* Agronomist Dashboard Container */
+    .agronomist-container { max-width: 1200px; margin: 30px auto 60px auto; padding: 0 20px; font-family: 'Inter', sans-serif; }
+    
+    /* Header */
+    .page-header { margin-bottom: 30px; }
+    .page-header h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    .page-header p { font-size: 15px; color: #6B7280; margin: 0; }
+
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+    .kpi-card { background: white; border-radius: 12px; border: 1px solid #E5E7EB; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    
+    /* Top Accents */
+    .kpi-card.pending::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #F59E0B; }
+    .kpi-card.verified::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #10B981; }
+    .kpi-card.consults::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #3B82F6; }
+
+    .kpi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .kpi-title { font-size: 13px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+    .kpi-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .kpi-icon.orange { background: #FFF7ED; color: #F59E0B; }
+    .kpi-icon.green { background: #ECFDF5; color: #10B981; }
+    .kpi-icon.blue { background: #EFF6FF; color: #3B82F6; }
+    .kpi-value { font-size: 32px; font-weight: 800; color: #111827; margin: 0; line-height: 1; }
+
+    /* Widget Card */
+    .widget-card { background: white; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+    
+    /* Table Header & Filters */
+    .table-header { padding: 20px 24px; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background: #F9FAFB; }
+    .widget-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 8px; }
+    
+    .filter-form { display: flex; gap: 12px; }
+    .filter-input { padding: 10px 16px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; width: 250px; outline: none; transition: border-color 0.2s; }
+    .filter-input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1); }
+    .btn-filter { background: #111827; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+    .btn-filter:hover { background: #374151; }
+
+    /* Table */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 16px 24px; color: #6B7280; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #E5E7EB; background: white; }
+    td { padding: 16px 24px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+    tr:hover td { background: #F9FAFB; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Table Elements */
+    .case-img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .case-disease { font-weight: 700; font-size: 15px; color: #111827; margin: 0 0 4px 0; }
+    .case-farmer { font-size: 13px; color: #6B7280; margin: 0; }
+    .case-farmer span { font-weight: 600; color: #2563EB; }
+    
+    .badge { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .badge-conf { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    .badge-pending { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+    .badge-verified { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
+
+    .action-buttons { display: flex; gap: 8px; align-items: center; }
+    .btn-review { background: #111827; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-review:hover { background: #059669; }
+    .btn-delete { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-delete:hover { background: #DC2626; color: white; }
+
+    /* Empty State */
+    .empty-table { padding: 60px 20px; text-align: center; }
+    .empty-table-icon { font-size: 48px; margin-bottom: 16px; display: block; color: #10B981; }
+    .empty-table h4 { font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 8px 0; }
+    .empty-table p { color: #6B7280; font-size: 14px; margin: 0; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .kpi-grid { grid-template-columns: 1fr; }
+        .table-header { flex-direction: column; align-items: flex-start; }
+        .filter-form { width: 100%; }
+        .filter-input { flex-grow: 1; }
+    }
+</style>
+
+<div class="agronomist-container">
     
     <!-- Header -->
-    <div style="margin-bottom: 30px;">
-        <h1 style="font-size: 32px; font-weight: 800; color: #111; margin-bottom: 8px;">👨‍🔬 Expert Triage Dashboard</h1>
-        <p style="color: #666; font-size: 16px;">Review escalated AI cases and provide expert prescriptions.</p>
+    <div class="page-header">
+        <h1>👨‍🔬 Expert Triage Dashboard</h1>
+        <p>Review escalated AI cases and provide expert prescriptions to farmers.</p>
     </div>
 
     <!-- Stats Row -->
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px;">
-        <div style="background: white; padding: 24px; border-radius: 12px; border-left: 6px solid #F59E0B; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-            <small style="color: #666; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Pending Reviews</small>
-            <h2 style="font-size: 36px; margin: 8px 0 0 0; color: #111;">{{ total_pending }}</h2>
+    <div class="kpi-grid">
+        <!-- Pending Reviews -->
+        <div class="kpi-card pending">
+            <div class="kpi-header">
+                <p class="kpi-title">Pending Reviews</p>
+                <div class="kpi-icon orange"><i class="bi bi-clock-history"></i></div>
+            </div>
+            <h2 class="kpi-value">{{ total_pending }}</h2>
         </div>
-        <div style="background: white; padding: 24px; border-radius: 12px; border-left: 6px solid #059669; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-            <small style="color: #666; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Verified Cases</small>
-            <h2 style="font-size: 36px; margin: 8px 0 0 0; color: #111;">{{ total_verified }}</h2>
+
+        <!-- Verified Cases -->
+        <div class="kpi-card verified">
+            <div class="kpi-header">
+                <p class="kpi-title">Verified Cases</p>
+                <div class="kpi-icon green"><i class="bi bi-patch-check"></i></div>
+            </div>
+            <h2 class="kpi-value">{{ total_verified }}</h2>
         </div>
-        <div style="background: white; padding: 24px; border-radius: 12px; border-left: 6px solid #2563EB; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-            <small style="color: #666; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">Video Consultations</small>
-            <h2 style="font-size: 36px; margin: 8px 0 0 0; color: #111;">{{ consultations|length }}</h2>
+
+        <!-- Video Consultations -->
+        <div class="kpi-card consults">
+            <div class="kpi-header">
+                <p class="kpi-title">Video Consultations</p>
+                <div class="kpi-icon blue"><i class="bi bi-camera-video"></i></div>
+            </div>
+            <h2 class="kpi-value">{{ consultations|length }}</h2>
         </div>
     </div>
 
-    <!-- Escalation Inbox -->
-    <div style="background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); border: 1px solid #eee; overflow: hidden; margin-bottom: 40px;">
+    <!-- Escalation Inbox Table -->
+    <div class="widget-card">
         
-        <!-- Header with Filter -->
-        <div style="padding: 24px 32px; border-bottom: 1px solid #eee; background: #F9FAFB; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-            <h3 style="font-size: 20px; font-weight: 700; color: #111; margin: 0;">🚨 Case Escalation Inbox</h3>
+        <!-- Header & Filter -->
+        <div class="table-header">
+            <h3 class="widget-title"><i class="bi bi-exclamation-triangle-fill" style="color: #EF4444;"></i> Case Escalation Inbox</h3>
             
-            <form method="GET" style="display: flex; gap: 12px;">
-                <input type="text" name="crop" placeholder="Filter by crop (e.g., Tomato)..." value="{{ request.GET.crop|default:'' }}" 
-                       style="padding: 10px 16px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; width: 250px; outline: none;">
-                <button type="submit" style="background: #111; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer;">
-                    Filter
-                </button>
+            <form method="GET" class="filter-form">
+                <input type="text" name="crop" placeholder="Filter by crop (e.g., Tomato)..." value="{{ request.GET.crop|default:'' }}" class="filter-input">
+                <button type="submit" class="btn-filter">Filter</button>
             </form>
         </div>
         
-        <!-- Modern Table -->
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <!-- Table -->
+        <div class="table-responsive">
+            <table>
                 <thead>
-                    <tr style="background: white; border-bottom: 2px solid #eee;">
-                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Leaf Image</th>
-                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">AI Prediction</th>
-                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Confidence</th>
-                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
-                        <th style="padding: 20px 32px; color: #666; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
+                    <tr>
+                        <th>Leaf Image</th>
+                        <th>AI Prediction</th>
+                        <th>Confidence</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for case in escalated_cases %}
-                    <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='white'">
-                        
-                                                <!-- Image -->
-                        <td style="padding: 20px 32px;">
-                            <div style="width: 80px; height: 80px; border-radius: 10px; overflow: hidden; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ case.image.url }}" 
-                                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=100&q=80';"
-                                     style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
+                    <tr>
+                        <!-- Image -->
+                        <td>
+                            <img src="{{ case.image.url }}" class="case-img" 
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=100&q=80';">
                         </td>
                         
                         <!-- Prediction -->
-                        <td style="padding: 20px 32px;">
-                            <div style="font-weight: 700; font-size: 16px; color: #111; margin-bottom: 4px;">{{ case.predicted_disease }}</div>
-                            <div style="font-size: 14px; color: #666;">Farmer: <span style="font-weight: 600; color: #2563EB;">{{ case.user.username }}</span></div>
+                        <td>
+                            <p class="case-disease">{{ case.predicted_disease }}</p>
+                            <p class="case-farmer">Farmer: <span>{{ case.user.username }}</span></p>
                         </td>
                         
                         <!-- Confidence -->
-                        <td style="padding: 20px 32px;">
-                            <span style="background: #FEF2F2; color: #DC2626; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 15px; border: 1px solid #FECACA;">
+                        <td>
+                            <span class="badge badge-conf">
                                 {{ case.confidence }}%
                             </span>
                         </td>
                         
                         <!-- Status -->
-                        <td style="padding: 20px 32px;">
+                        <td>
                             {% if case.review_status == 'verified' %}
-                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #ECFDF5; color: #059669; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; border: 1px solid #D1FAE5;">
+                                <span class="badge badge-verified">
                                     <i class="bi bi-check-circle-fill"></i> Verified
                                 </span>
                             {% else %}
-                                <span style="display: inline-flex; align-items: center; gap: 6px; background: #FEF3C7; color: #D97706; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; border: 1px solid #FDE68A;">
+                                <span class="badge badge-pending">
                                     <i class="bi bi-clock-fill"></i> Pending
                                 </span>
                             {% endif %}
                         </td>
                         
-                                                <!-- Action -->
-                        <td style="padding: 20px 32px;">
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <a href="{% url 'review_case' case.id %}" style="background: #111; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#111'">
-                                    Review Case →
+                        <!-- Action -->
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'review_case' case.id %}" class="btn-review">
+                                    Review <i class="bi bi-arrow-right"></i>
                                 </a>
-                                <a href="{% url 'delete_triage_case' case.id %}" onclick="return confirm('Are you sure you want to remove this case?');" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; padding: 10px 14px; border-radius: 8px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#DC2626'; this.style.color='white'" onmouseout="this.style.background='#FEF2F2'; this.style.color='#DC2626'">
-                                    <i class="bi bi-x-lg"></i>
+                                <a href="{% url 'delete_triage_case' case.id %}" onclick="return confirm('Are you sure you want to remove this case?');" class="btn-delete" title="Delete Case">
+                                    <i class="bi bi-trash3"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="padding: 60px; text-align: center;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
-                            <h3 style="font-size: 20px; color: #111; margin-bottom: 8px;">You're all caught up!</h3>
-                            <p style="color: #666;">There are no escalated cases in the inbox right now.</p>
+                        <td colspan="5">
+                            <div class="empty-table">
+                                <i class="bi bi-check-circle-fill empty-table-icon"></i>
+                                <h4>You're all caught up!</h4>
+                                <p>There are no escalated cases in the inbox right now.</p>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

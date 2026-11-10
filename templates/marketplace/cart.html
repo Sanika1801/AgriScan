@@ -1,32 +1,152 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
-    <h1 style="font-size: 32px; margin-bottom: 20px;">Your Cart</h1>
+
+<style>
+    /* Cart Page Container */
+    .cart-container { max-width: 1100px; margin: 30px auto 60px auto; padding: 0 20px; font-family: 'Inter', sans-serif; }
     
-    <div class="card" style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;">
-        {% if cart_items %}
+    /* Header */
+    .page-header { margin-bottom: 30px; }
+    .page-header h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    .page-header p { font-size: 15px; color: #6B7280; margin: 0; }
+
+    /* Main Grid */
+    .cart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+
+    /* Left Column: Cart Items */
+    .cart-items-wrapper { background: white; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+    
+    .cart-item { display: flex; align-items: center; gap: 20px; padding: 24px; border-bottom: 1px solid #F3F4F6; }
+    .cart-item:last-child { border-bottom: none; }
+    
+    /* Product Icon Placeholder */
+    .item-image { width: 72px; height: 72px; border-radius: 12px; object-fit: cover; background: #F3F4F6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 28px; border: 1px solid #E5E7EB; }
+    
+    .item-details { flex-grow: 1; overflow: hidden; }
+    .item-name { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* Quantity Badge */
+    .qty-badge { display: inline-flex; align-items: center; background: #ECFDF5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #D1FAE5; }
+    
+    .item-price-area { text-align: right; min-width: 120px; flex-shrink: 0; }
+    .item-price { font-size: 18px; font-weight: 800; color: #111827; margin: 0; white-space: nowrap; }
+
+    /* Right Column: Order Summary */
+    .summary-wrapper { background: white; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 24px; position: sticky; top: 20px; }
+    .summary-title { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 20px 0; border-bottom: 1px solid #F3F4F6; padding-bottom: 16px; }
+    
+    .summary-row { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 16px; color: #4B5563; }
+    .summary-row.total { border-top: 1px solid #F3F4F6; padding-top: 16px; margin-bottom: 24px; font-size: 20px; font-weight: 800; color: #111827; }
+    .summary-row.total span:last-child { color: #059669; }
+    
+    .btn-checkout { display: flex; justify-content: center; align-items: center; width: 100%; background: #059669; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: background 0.2s; text-decoration: none; gap: 8px; box-sizing: border-box; }
+    .btn-checkout:hover { background: #047857; }
+
+    /* Empty State */
+    .empty-cart { background: white; border-radius: 16px; border: 1px solid #E5E7EB; padding: 60px 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .empty-cart i { font-size: 56px; color: #D1D5DB; margin-bottom: 16px; display: block; }
+    .empty-cart h2 { font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 8px 0; }
+    .empty-cart p { font-size: 15px; color: #6B7280; margin: 0 0 24px 0; }
+    
+    /* Responsive */
+    @media (max-width: 900px) {
+        .cart-grid { grid-template-columns: 1fr; }
+        .summary-wrapper { position: static; }
+    }
+    @media (max-width: 600px) {
+        .cart-item { flex-direction: column; align-items: flex-start; position: relative; gap: 16px; }
+        .item-image { width: 100%; height: 160px; font-size: 48px; }
+        .item-price-area { text-align: left; width: 100%; }
+    }
+</style>
+
+<div class="cart-container">
+    
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Your Shopping Cart</h1>
+        <p>Review your items and proceed to secure checkout.</p>
+    </div>
+
+    {% if cart_items %}
+    <div class="cart-grid">
+        
+        <!-- Left Column: Cart Items -->
+        <div class="cart-items-wrapper">
             {% for item in cart_items %}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="background: #ECFDF5; color: #059669; font-weight: bold; padding: 4px 10px; border-radius: 6px;">{{ item.quantity }}x</span>
-                    <span style="font-size: 16px; font-weight: 600;">{{ item.product.name }}</span>
+            <div class="cart-item">
+                
+                <!-- Image (Falls back to icon if no image exists) -->
+                <div class="item-image">
+                    <i class="bi bi-box-seam"></i>
                 </div>
-                <strong style="font-size: 18px; color: #111;">₹{{ item.total_price }}</strong>
+                
+                <!-- Details -->
+                <div class="item-details">
+                    <h3 class="item-name">{{ item.product.name }}</h3>
+                    <div style="margin-top: 8px;">
+                        <span class="qty-badge">Qty: {{ item.quantity }}</span>
+                    </div>
+                </div>
+
+                <!-- Price -->
+                <div class="item-price-area">
+                    <p class="item-price">₹{{ item.total_price }}</p>
+                </div>
             </div>
             {% endfor %}
+        </div>
+
+        <!-- Right Column: Order Summary -->
+        <div class="summary-wrapper">
+            <h3 class="summary-title">Order Summary</h3>
             
-            <div style="text-align: right; margin-top: 30px;">
-                <h2 style="margin-bottom: 20px;">Total: <span style="color: #059669;">₹{{ total }}</span></h2>
-                <a href="{% url 'checkout' %}" style="background: #059669; color: white; padding: 14px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">Proceed to Checkout</a>
+            <div class="summary-row">
+                <span>Subtotal ({{ cart_items|length }} items)</span>
+                <span>₹{{ total }}</span>
             </div>
-        {% else %}
-            <div style="text-align: center; padding: 40px 0;">
-                <div style="font-size: 48px; margin-bottom: 16px;">🛒</div>
-                <h3 style="margin-bottom: 8px;">Your cart is empty</h3>
-                <p style="color: #666; margin-bottom: 24px;">Looks like you haven't added any products yet.</p>
-                <a href="{% url 'store' %}" style="background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Marketplace</a>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span style="color: #059669; font-weight: 600;">Free</span>
             </div>
-        {% endif %}
+            <div class="summary-row">
+                <span>Tax</span>
+                <span>Calculated at checkout</span>
+            </div>
+            
+            <div class="summary-row total">
+                <span>Total</span>
+                <span>₹{{ total }}</span>
+            </div>
+
+            <a href="{% url 'checkout' %}" class="btn-checkout">
+                <i class="bi bi-shield-lock-fill"></i> Proceed to Checkout
+            </a>
+            
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="{% url 'store' %}" style="color: #2563EB; font-size: 14px; font-weight: 600; text-decoration: none;">← Continue Shopping</a>
+            </div>
+        </div>
+
     </div>
+    
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-cart">
+        <i class="bi bi-cart-x"></i>
+        <h2>Your cart is empty</h2>
+        <p>Looks like you haven't added any agricultural products yet.</p>
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center; margin-top: 24px;">
+            <a href="{% url 'store' %}" class="btn-checkout" style="width: auto; padding: 12px 32px;">
+                Browse Marketplace
+            </a>
+            <a href="{% url 'order_history' %}" style="color: #2563EB; font-weight: 600; text-decoration: none; font-size: 14px;">
+                View My Past Orders →
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+
 {% endblock %}

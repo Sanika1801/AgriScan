@@ -1,7 +1,11 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
+    # NEW: Redirect /community/ to /community/forum/
+    path('', RedirectView.as_view(url='forum/', permanent=False)),
+    
     # Expert Consultation URLs
     path('experts/', views.expert_list, name='expert_list'),
     path('experts/book/<int:expert_id>/', views.book_consultation, name='book_consultation'),
