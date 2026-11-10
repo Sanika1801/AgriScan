@@ -51,15 +51,59 @@ def setup_live_db(request):
             u.save()
             AgronomistProfile.objects.get_or_create(user=u, defaults={'specialization': e["spec"], 'experience_years': e["exp"], 'consultation_fee': e["fee"]})
 
-        # 5. CREATE DISEASES
+                # 5. CREATE DISEASES (All 38 PlantVillage Classes)
         diseases = [
             ("Apple Scab", "A fungal disease causing olive-green spots.", "Apply fungicides.", "Prune trees."),
+            ("Apple Black Rot", "A fungal disease causing frogeye leaf spots.", "Remove infected branches.", "Ensure proper pruning."),
+            ("Cedar Apple Rust", "A fungal disease causing yellow-orange spots.", "Apply rust-specific fungicides.", "Remove nearby cedar trees."),
             ("Apple Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Blueberry Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Cherry Powdery Mildew", "A fungal disease causing white powdery growth.", "Apply sulfur-based fungicides.", "Improve air circulation."),
+            ("Cherry Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Corn Cercospora Leaf Spot", "A fungal disease causing gray to brown lesions.", "Apply foliar fungicides.", "Rotate crops."),
+            ("Corn Common Rust", "A fungal disease causing reddish-brown pustules.", "Apply fungicides early.", "Plant resistant hybrids."),
+            ("Corn Northern Leaf Blight", "A fungal disease causing cigar-shaped lesions.", "Apply fungicides.", "Crop rotation."),
+            ("Corn Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Grape Black Rot", "A fungal disease causing brown spots on leaves.", "Remove mummified berries.", "Apply fungicides."),
+            ("Grape Esca", "A complex wood disease.", "No cure, remove infected vines.", "Prune properly."),
+            ("Grape Leaf Blight", "A fungal disease causing brown spots.", "Apply copper fungicides.", "Ensure good drainage."),
+            ("Grape Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Orange Haunglongbing", "Citrus greening disease spread by insects.", "Remove infected trees.", "Control psyllid insects."),
+            ("Peach Bacterial Spot", "A bacterial disease causing dark spots.", "Apply copper sprays.", "Plant resistant varieties."),
+            ("Peach Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Pepper Bell Bacterial Spot", "A bacterial disease causing water-soaked spots.", "Apply copper-based bactericides.", "Avoid overhead watering."),
+            ("Pepper Bell Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Potato Early Blight", "A fungal disease causing dark concentric rings.", "Apply chlorothalonil.", "Crop rotation."),
+            ("Potato Late Blight", "A devastating fungal disease causing dark lesions.", "Apply copper fungicides immediately.", "Destroy infected plants."),
+            ("Potato Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Raspberry Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Soybean Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Squash Powdery Mildew", "A fungal disease causing white powdery spots.", "Apply neem oil or sulfur.", "Ensure good airflow."),
+            ("Strawberry Leaf Scorch", "A fungal disease causing purple spots.", "Apply fungicides.", "Remove old leaves."),
+            ("Strawberry Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
+            ("Tomato Bacterial Spot", "A bacterial disease causing small dark spots.", "Apply copper sprays.", "Use disease-free seeds."),
+            ("Tomato Early Blight", "A fungal disease causing target-like spots.", "Apply fungicides.", "Mulch around plants."),
             ("Tomato Late Blight", "A devastating fungal disease.", "Apply copper fungicides.", "Ensure air circulation."),
+            ("Tomato Leaf Mold", "A fungal disease causing yellow spots.", "Improve ventilation.", "Reduce humidity."),
+            ("Tomato Septoria Leaf Spot", "A fungal disease causing small circular spots.", "Apply fungicides.", "Remove lower leaves."),
+            ("Tomato Spider Mites", "Pest causing stippling on leaves.", "Apply miticides.", "Increase humidity."),
+            ("Tomato Target Spot", "A fungal disease causing concentric rings.", "Apply fungicides.", "Crop rotation."),
+            ("Tomato Yellow Leaf Curl", "A viral disease spread by whiteflies.", "Control whiteflies.", "Use resistant varieties."),
+            ("Tomato Mosaic Virus", "A viral disease causing mottling.", "No cure, destroy plants.", "Disinfect tools."),
             ("Tomato Healthy", "The plant is healthy.", "No treatment needed.", "Keep monitoring."),
         ]
+        
         for name, desc, treat, prev in diseases:
-            Disease.objects.get_or_create(name=name, defaults={'description': desc, 'treatment': treat, 'prevention': prev, 'dosage_instructions': 'Follow label.', 'safety_advisory': 'Wear PPE.'})
+            Disease.objects.get_or_create(
+                name=name, 
+                defaults={
+                    'description': desc, 
+                    'treatment': treat, 
+                    'prevention': prev, 
+                    'dosage_instructions': 'Apply as per manufacturer guidelines on the product label.', 
+                    'safety_advisory': 'Avoid spraying during high winds or near water bodies to protect pollinators.'
+                }
+            )
 
         # 6. CREATE CATEGORIES
         cat_fert, _ = Category.objects.get_or_create(name="Fertilizers")
