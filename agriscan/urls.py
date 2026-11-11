@@ -160,6 +160,21 @@ def setup_live_db(request):
                 name=name, 
                 defaults={'seller': seller, 'category': cat, 'price': price, 'stock': stock, 'description': desc}
             )
+            
+                    # 9. CREATE MARKET PRICES (for the Mandi Widget)
+        from detector.models import MarketPrice
+        from datetime import date, timedelta
+        import random
+
+        crops = ['Wheat', 'Tomato', 'Grapes', 'Potato']
+        for crop in crops:
+            base_price = random.randint(1500, 2500)
+            # Create data for the last 7 days
+            for i in range(7):
+                d = date.today() - timedelta(days=i)
+                # Add random daily variation
+                price = base_price + random.randint(-150, 150) 
+                MarketPrice.objects.get_or_create(crop_name=crop, date=d, defaults={'price_per_quintal': price})
         
         return HttpResponse("🎉 SUCCESS! The database is reset and populated with 8 products.<br><br>Try logging in now with:<br><b>farmer_raj</b> / pass12345")
         
